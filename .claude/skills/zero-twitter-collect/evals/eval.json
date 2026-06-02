@@ -1,0 +1,11 @@
+{
+  "skill": "zero-twitter-collect",
+  "cases": [
+    {
+      "id": "search-ai-top",
+      "prompt": "Search Top tweets about AI in English, limit 5",
+      "command": "python3 scripts/search_tweets.py search --query 'AI lang:en -is:retweet' --query-type Top --limit 5",
+      "assert": "json.count >= 1"
+    }
+  ]
+}

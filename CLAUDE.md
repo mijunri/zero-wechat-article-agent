@@ -1,10 +1,18 @@
 # zero-wechat-article-agent — 指挥手册
 
-> 本仓库是 **微信公众号图文自动化** 的唯一权威实现。监督者 `zero-supervisor` 仅登记与委派，不在此堆叠其它领域逻辑。
+> **AI 知识博主** 微信公众号子代理。本仓库负责：热点采集 → 选题 → 写稿 → 草稿/发布（官方 API）。
 
 ## 定位
 
-自动化 **公众号后台能力**（官方 API）：素材、草稿、发布；配合 LLM 完成「写稿 → 入库 → 可选发布」流水线。
+面向 **AI 主题公众号**（教程、资讯、工具评测、行业观察），自动化内容供应链：
+
+| 阶段 | 能力 | Skill |
+|------|------|-------|
+| 采集 | Twitter 话题推文、AttentionVC 热门 AI 长文 | `zero-twitter-collect`、`zero-attentionvc-scrape` |
+| 生产 | 选题、写稿、配图 | `zero-wechat-article`（公众号 API） |
+| 发布 | 草稿、人工确认后发布 | `zero-wechat-article` |
+
+监督者 [zero-supervisor](https://github.com/mijunri/zero-supervisor) 仅登记与委派，不在此堆叠其它领域逻辑。
 
 ## 命名
 
@@ -12,14 +20,15 @@
 |----|-----|
 | 仓库 | `zero-wechat-article-agent` |
 | 子代理 | `zero-wechat-article-agent` |
-| Skill | `zero-wechat-article`（`/zero-wechat-article`） |
+| 主编排 Skill | `zero-wechat-article` |
 
 ## 原则
 
-1. **轻量**：Python + httpx，禁止引入 Node 桌面栈。
-2. **证据优先**：发布/群发前必须有人工确认或显式 `CONFIRM_PUBLISH=1`。
-3. **凭证不入库**：仅 `.env` / 环境变量。
-4. **小步交付**：先 token → 素材 → 草稿 → 发布，每步可 `verify.sh` 验证。
+1. **AI 博主视角**：采集信号服务于「读者能学到什么 / 行业发生了什么」，避免纯搬运。
+2. **轻量**：Python + httpx/urllib，禁止 Node 桌面栈。
+3. **证据优先**：发布前必须人工确认或 `CONFIRM_PUBLISH=1`。
+4. **凭证不入库**：`.env`、`scripts/agent.env` 仅本地；仓库只保留 `*.example`。
+5. **小步交付**：采集 Skill 先 `verify.sh`，再写稿流水线。
 
 ## 目录
 
@@ -27,26 +36,42 @@
 zero-wechat-article-agent/
 ├── CLAUDE.md
 ├── AGENTS.md
-├── src/zero_wechat_article/   # API 客户端与编排
-├── .claude/skills/zero-wechat-article/
+├── src/zero_wechat_article/          # 公众号 API 客户端
+├── .claude/skills/
+│   ├── zero-twitter-collect/         # TwitterAPI.io 话题检索
+│   ├── zero-attentionvc-scrape/      # AttentionVC AI 热榜
+│   └── zero-wechat-article/          # 公众号草稿/发布
 └── docs/
 ```
+
+## Skill Roster
+
+| Skill | 命令 | 职责 |
+|-------|------|------|
+| **zero-twitter-collect** | `/zero-twitter-collect` | 按话题/关键词查推文（TwitterAPI.io） |
+| **zero-attentionvc-scrape** | `/zero-attentionvc-scrape` | AttentionVC AI 分类热榜长文 |
+| **zero-wechat-article** | `/zero-wechat-article` | 公众号 token、素材、草稿、发布 |
 
 ## 分派
 
 | 任务 | 处理 |
 |------|------|
-| 公众号 API、写稿发布流程 | 本仓库 `/zero-wechat-article` |
-| GitHub 仓库/PR | 委派 `zero-supervisor` → `github-manager` |
-| 阿里云 OSS/ECS | 委派 `zero-aliyun-agent` |
+| Twitter 话题数据 | `/zero-twitter-collect` |
+| AttentionVC 热门 AI 帖 | `/zero-attentionvc-scrape` |
+| 公众号 API、写稿发布 | `/zero-wechat-article` |
+| GitHub / PR | `zero-supervisor` → `github-manager` |
 
 ## 凭证
 
-`WECHAT_MP_APPID`、`WECHAT_MP_SECRET` — 见 `.env.example`。
+| Skill | 环境变量 |
+|-------|----------|
+| zero-twitter-collect | `TWITTERAPI_IO_KEY` |
+| zero-attentionvc-scrape | （公开 API，无需 key） |
+| zero-wechat-article | `WECHAT_MP_APPID`、`WECHAT_MP_SECRET` |
 
 ## 迭代焦点
 
-1. ⬜ `access_token` 缓存与刷新
-2. ⬜ 图片上传 + 草稿图文 API
-3. ⬜ CLI：`draft create` / `publish submit`
-4. ⬜ Agent 工作流模板（选题 → 草稿）
+1. ✅ 采集：Twitter + AttentionVC Skills
+2. ⬜ 选题模板：从采集 JSON 生成公众号提纲
+3. ⬜ `access_token` 缓存、草稿图文 API
+4. ⬜ 发布门禁与 CLI 完善

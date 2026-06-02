@@ -9,8 +9,10 @@
 3. 发布类操作须可审计、可回滚，默认草稿不直发
 4. 不得将 AppSecret、token 写入仓库或日志
 
-## Skill
+## Skills
 
 | Skill | 路径 |
 |-------|------|
+| `zero-twitter-collect` | `.claude/skills/zero-twitter-collect/SKILL.md` |
+| `zero-attentionvc-scrape` | `.claude/skills/zero-attentionvc-scrape/SKILL.md` |
 | `zero-wechat-article` | `.claude/skills/zero-wechat-article/SKILL.md` |

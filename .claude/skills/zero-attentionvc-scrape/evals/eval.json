@@ -1,0 +1,11 @@
+{
+  "skill": "zero-attentionvc-scrape",
+  "cases": [
+    {
+      "id": "fetch-ai-7d",
+      "prompt": "Fetch top 10 AI articles from AttentionVC for the last 7 days",
+      "command": "python3 scripts/fetch_ai_hot.py fetch --period 7d --limit 10",
+      "assert": "json.count >= 5"
+    }
+  ]
+}

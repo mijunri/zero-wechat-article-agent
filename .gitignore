@@ -4,6 +4,7 @@ __pycache__/
 .env
 .env.*
 !.env.example
+**/scripts/agent.env
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
