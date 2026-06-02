@@ -2,7 +2,7 @@
 
 - Docs: https://docs.twitterapi.io/introduction
 - Endpoint: `GET https://api.twitterapi.io/twitter/tweet/advanced_search`
-- Header: `X-API-Key: $TWITTERAPI_IO_KEY`
+- Header: `X-API-Key: $twitter_api_key` (env var `twitter_api_key`)
 
 ## Query parameters
 

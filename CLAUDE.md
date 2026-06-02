@@ -65,7 +65,7 @@ zero-wechat-article-agent/
 
 | Skill | 环境变量 |
 |-------|----------|
-| zero-twitter-collect | `TWITTERAPI_IO_KEY` |
+| zero-twitter-collect | `twitter_api_key` |
 | zero-attentionvc-scrape | （公开 API，无需 key） |
 | zero-wechat-article | `WECHAT_MP_APPID`、`WECHAT_MP_SECRET` |
 

@@ -3,7 +3,7 @@ name: zero-twitter-collect
 description: >
   Collect tweets by topic/keyword via TwitterAPI.io (docs.twitterapi.io). USE when user
   mentions Twitter/X 推文采集、话题搜索、AI Twitter 热点、twitterapi.io, or needs tweet data
-  for the AI blogger WeChat pipeline. Requires TWITTERAPI_IO_KEY. Never log or commit keys.
+  for the AI blogger WeChat pipeline. Requires env twitter_api_key. Never log or commit keys.
 allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/*)
 metadata:
   version: "1.0.0"
@@ -18,11 +18,11 @@ metadata:
 
 ```bash
 SKILL_DIR="${CLAUDE_SKILL_DIR}"
-source "${SKILL_DIR}/scripts/env.sh"
+export twitter_api_key="..."   # 或已在 shell / 部署环境中配置
 bash "${SKILL_DIR}/scripts/verify.sh"
 ```
 
-凭证：`scripts/agent.env`（从 `agent.env.example` 复制），变量 `TWITTERAPI_IO_KEY`。
+凭证：环境变量 **`twitter_api_key`**（TwitterAPI.io API Key）。可选 `source scripts/env.sh` 加载本地 `scripts/agent.env`（gitignore）。
 
 ## CLI
 

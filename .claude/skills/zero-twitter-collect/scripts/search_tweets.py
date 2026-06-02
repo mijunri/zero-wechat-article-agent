@@ -14,9 +14,9 @@ API_URL = "https://api.twitterapi.io/twitter/tweet/advanced_search"
 
 
 def _api_key() -> str:
-    key = os.environ.get("TWITTERAPI_IO_KEY", "").strip()
+    key = os.environ.get("twitter_api_key", "").strip()
     if not key:
-        print("Set TWITTERAPI_IO_KEY in scripts/agent.env", file=sys.stderr)
+        print("Set environment variable twitter_api_key", file=sys.stderr)
         sys.exit(1)
     return key
 

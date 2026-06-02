@@ -40,7 +40,7 @@ bash .claude/skills/zero-wechat-article/scripts/verify.sh
 
 | 变量 | 说明 |
 |------|------|
-| `TWITTERAPI_IO_KEY` | [TwitterAPI.io](https://twitterapi.io/) — 见 `.claude/skills/zero-twitter-collect/scripts/agent.env.example` |
+| `twitter_api_key` | [TwitterAPI.io](https://twitterapi.io/) API Key（环境变量） |
 | `WECHAT_MP_APPID` | 公众号 AppID |
 | `WECHAT_MP_SECRET` | 公众号 AppSecret |
 

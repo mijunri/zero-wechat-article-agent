@@ -3,8 +3,8 @@ set -euo pipefail
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=env.sh
 source "${SKILL_DIR}/scripts/env.sh"
-if [[ -z "${TWITTERAPI_IO_KEY:-}" ]]; then
-  echo "Missing TWITTERAPI_IO_KEY — copy scripts/agent.env.example to scripts/agent.env" >&2
+if [[ -z "${twitter_api_key:-}" ]]; then
+  echo "Missing twitter_api_key — export twitter_api_key in your environment" >&2
   exit 1
 fi
 python3 "${SKILL_DIR}/scripts/search_tweets.py" search \
