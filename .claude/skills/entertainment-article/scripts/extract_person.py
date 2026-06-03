@@ -23,6 +23,9 @@ def extract_person(title: str) -> str:
     m_pair = re.match(r"^([\u4e00-\u9fff]{2,4})([\u4e00-\u9fff]{2,4})", t)
     if m_pair and len(m_pair.group(1)) >= 2 and len(m_pair.group(2)) >= 2:
         return m_pair.group(1)
+    m_verb = re.match(r"^([\u4e00-\u9fff]{2,3})([发晒称说回应])", t)
+    if m_verb:
+        return m_verb.group(1)
     m = _NAME_PREFIX.match(t)
     if m:
         return m.group(1)

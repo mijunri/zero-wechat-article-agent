@@ -5,7 +5,7 @@
 ## 头条号娱乐日产线（entertainment-article）
 
 ```text
-hot-topics → 娱乐过滤 → volc-search 两轮 → compose_from_research → platform=toutiao
+hot-topics → 娱乐过滤 → volc 四轮搜索 → compose_from_research → platform=toutiao
 ```
 
 ```bash

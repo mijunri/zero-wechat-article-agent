@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Daily Toutiao ×3 — entertainment-article workflow (from mijunri/ai-article):
-  hot-topics → pick 娱乐 → volc-search ×2 → compose_from_research → publish
+Daily Toutiao ×3 — entertainment-article + volc 多轮搜索 → 成稿 → publish
 """
 from __future__ import annotations
 
@@ -24,6 +23,8 @@ TT = SKILLS / "zero-toutiao-entertainment" / "scripts"
 DELIVERABLES_ENV = SKILLS / "zero-deliverables" / "scripts" / "agent.env"
 VOLC_ENV = SKILLS / "volc-search" / "scripts" / "agent.env"
 DAILY_COUNT = 3
+VOLC_ROUNDS = 4
+ARTICLE_TYPE = "short"  # toutiao 短篇快讯；公众号可用 long
 
 
 def _load_env() -> None:
@@ -86,7 +87,7 @@ def main() -> None:
 
     me = _zam_me()
     print(f"发布账号: {me.get('display_name')} <{me.get('email')}>")
-    print("写作 Skill: entertainment-article (ai-article)\n")
+    print(f"写作: entertainment-article · 火山搜索 {VOLC_ROUNDS} 轮 · 体裁 {ARTICLE_TYPE}\n")
 
     CACHE.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(BJ).strftime("%Y%m%d-%H%M")
@@ -139,7 +140,7 @@ def main() -> None:
         html_path = CACHE / f"article-{stamp}-{idx+1}.html"
         topic_path.write_text(json.dumps(item, ensure_ascii=False, indent=2), encoding="utf-8")
 
-        print(f"[{idx+1}/{DAILY_COUNT}] 调研 {person} · {title[:24]}…")
+        print(f"[{idx+1}/{DAILY_COUNT}] 火山搜索×{VOLC_ROUNDS} → 成稿 · {person} · {title[:20]}…")
         _run(
             [
                 py,
@@ -150,10 +151,16 @@ def main() -> None:
                 title,
                 "--stamp",
                 stamp.replace("-", "")[:8],
+                "--rounds",
+                str(VOLC_ROUNDS),
                 "--json-out",
                 str(research_path),
             ]
         )
+
+        research = json.loads(research_path.read_text(encoding="utf-8"))
+        n_facts = len((research.get("bundle") or {}).get("facts") or [])
+        print(f"    调研完成: {n_facts} 条信息点 · bundle={research.get('bundle_file', '')}")
 
         _run(
             [
@@ -163,6 +170,8 @@ def main() -> None:
                 str(topic_path),
                 "--research-json",
                 str(research_path),
+                "--article-type",
+                ARTICLE_TYPE,
                 "--out",
                 str(article_path),
                 "--html-out",
@@ -171,8 +180,12 @@ def main() -> None:
         )
 
         art = json.loads(article_path.read_text(encoding="utf-8"))
-        if art.get("char_count", 0) < 320:
-            _die(f"Article too short ({art.get('char_count')}), check volc search results")
+        min_chars = 650 if ARTICLE_TYPE == "short" else 1800
+        if art.get("char_count", 0) < min_chars:
+            _die(
+                f"Article too short ({art.get('char_count')} < {min_chars}), "
+                f"check volc rounds / bundle"
+            )
 
         out = _run([py, str(TT / "publish_toutiao.py"), "--article-json", str(article_path)])
         result = json.loads(out)

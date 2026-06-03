@@ -40,8 +40,9 @@ python3 scripts/pipeline_daily_toutiao_entertainment.py
 ```text
 weibo + douyin + toutiao 热榜
   → entertainment_filter
-  → volc-search 两轮（research_topic.py → data/searchdata/）
-  → compose_from_research.py（entertainment-article 短篇）
+  → volc-search 四轮（R1人物/R2热点/R3聚焦/R4原话+抓取）
+  → research_bundle.json + data/searchdata/*.md
+  → compose_from_research.py（去AI味 + 结构化成稿）
   → publish_toutiao → platform=toutiao
 ```
 

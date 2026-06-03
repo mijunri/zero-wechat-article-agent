@@ -107,7 +107,7 @@ def entertainment_score(title: str) -> int:
     # Variety / celebrity gossip patterns
     if re.search(r"(恋|婚|离|孕|塌|瓜|剧透|淘汰|官宣)", t):
         score += 2
-    if re.search(r"(token|AI|大模型|公司烧不起)", t, re.I):
+    if re.search(r"(token|AI|大模型|公司烧不起|刃零|游戏|官宣延期)", t, re.I):
         score -= 6
     return score
 

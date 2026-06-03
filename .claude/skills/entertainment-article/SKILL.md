@@ -11,7 +11,10 @@ metadata:
 ---
 
 > **上游仓库**：[`mijunri/ai-article`](https://github.com/mijunri/ai-article) · 本目录为迁入 `zero-wechat-article-agent` 的副本。  
-> **自动化脚本**：`scripts/research_topic.py`、`scripts/compose_from_research.py`（配合 `volc-search`、`hot-topics`）。
+> **自动化脚本**
+> - `research_topic.py` — 火山搜索 **4 轮**（广度→热点→聚焦→原话/抓取），输出 `data/searchdata/*_bundle.json`
+> - `compose_from_research.py` — 读 bundle 撰写 HTML（含去 AI 味）
+> - 依赖 [`volc-search`](../volc-search/skill.md)、[`hot-topics`](../hot-topics/SKILL.md)
 
 # Entertainment Article - 娱乐公众号写作
 

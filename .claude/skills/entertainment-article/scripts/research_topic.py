@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-Round 1+2 search per entertainment-article SKILL; save data/searchdata/*.md
+Multi-round Volcano search (entertainment-article §第2步):
+  R1 人物广度 → R2 热点深度 → R3 聚焦线索 → R4 原话/回应 (+ 可选网页抓取)
 """
 from __future__ import annotations
 
 import argparse
 import asyncio
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -14,17 +16,21 @@ from zoneinfo import ZoneInfo
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 VOLC_SCRIPT = REPO_ROOT / ".claude" / "skills" / "volc-search" / "scripts"
+ENT_SCRIPT = Path(__file__).resolve().parent
 sys.path.insert(0, str(VOLC_SCRIPT))
+sys.path.insert(0, str(ENT_SCRIPT))
 
-from volc_search import format_markdown, web_search  # noqa: E402
+from parse_results import parse_web_results  # noqa: E402
+from research_bundle import build_bundle, save_bundle_md  # noqa: E402
+from volc_search import format_markdown, web_fetch, web_search  # noqa: E402
 
 BJ = ZoneInfo("Asia/Shanghai")
 SEARCH_DIR = REPO_ROOT / "data" / "searchdata"
 
 
-def _save_md(path: Path, *, query: str, person: str, topic: str, body: str) -> None:
+def _save_md(path: Path, *, query: str, person: str, topic: str, body: str, round_no: int) -> None:
     now = datetime.now(BJ).strftime("%Y-%m-%d %H:%M")
-    content = f"""# 搜索数据
+    content = f"""# 搜索数据 · 第{round_no}轮
 
 - **来源**: Volcano FeedCoop web_search
 - **获取时间**: {now}
@@ -35,70 +41,183 @@ def _save_md(path: Path, *, query: str, person: str, topic: str, body: str) -> N
 ## 原始结果
 
 {body}
-
-## 核心信息点
-
-（流水线自动摘录，成稿前请 Agent 按 entertainment-article 复核）
-
 """
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
 
 
-def _bullets_from_md(md: str, limit: int = 8) -> list[str]:
-    bullets: list[str] = []
-    for line in md.splitlines():
-        line = line.strip()
-        if line.startswith("**摘要：**"):
-            bullets.append(line.replace("**摘要：**", "").strip())
-        elif line.startswith("### ") and len(bullets) < limit:
-            title = line[4:].split(".", 1)[-1].strip()
-            if title:
-                bullets.append(title)
-    return bullets[:limit]
+def _safe_slug(s: str, max_len: int = 12) -> str:
+    s = re.sub(r"[^\w\u4e00-\u9fff-]+", "", s)
+    return (s or "topic")[:max_len]
 
 
-async def research(person: str, topic_title: str, *, stamp: str) -> dict:
+async def _search_round(
+    *,
+    person: str,
+    topic: str,
+    query: str,
+    tag: str,
+    stamp: str,
+    round_no: int,
+    count: int,
+    time_range: str,
+    fetch_top: bool,
+) -> dict:
+    data = await web_search(query, count=count, time_range=time_range)
+    items = parse_web_results(data)
+    md = format_markdown(data)
+    fname = f"{stamp}_{_safe_slug(person)}_{tag}_volc.md"
+    fpath = SEARCH_DIR / fname
+    _save_md(fpath, query=query, person=person, topic=topic, body=md, round_no=round_no)
+
+    if fetch_top and items and items[0].get("url"):
+        try:
+            fetched = await web_fetch(items[0]["url"])
+            content = (
+                fetched.get("Content")
+                or fetched.get("Text")
+                or fetched.get("Markdown")
+                or ""
+            )
+            if isinstance(content, str) and len(content) > 100:
+                items[0]["text"] = content[:2500]
+                items[0]["fetched"] = True
+        except Exception:
+            pass
+
+    return {
+        "round": round_no,
+        "tag": tag,
+        "query": query,
+        "file": str(fpath),
+        "items": items,
+    }
+
+
+async def research(
+    person: str,
+    topic_title: str,
+    *,
+    stamp: str,
+    rounds: int = 4,
+    count: int = 8,
+    time_range: str = "14d",
+) -> dict:
     from extract_person import topic_keywords  # noqa: E402
 
     kw = topic_keywords(topic_title, person)
+    collected: list[dict] = []
+    prior_items: list[dict] = []
+
+    # R1 广度
     q1 = f"{person} 个人经历 出道 背景"
-    q2 = f"{person} {kw} 详细 回应 原话"
+    r1 = await _search_round(
+        person=person,
+        topic=topic_title,
+        query=q1,
+        tag="r1-breadth",
+        stamp=stamp,
+        round_no=1,
+        count=count,
+        time_range=time_range,
+        fetch_top=False,
+    )
+    collected.append(r1)
+    prior_items.extend(r1["items"])
 
-    files: list[str] = []
-    queries = [("round1-breadth", q1), ("round2-depth", q2)]
-    all_bullets: list[str] = []
+    # R2 热点深度
+    q2 = f"{person} {kw} 详细 回应"
+    r2 = await _search_round(
+        person=person,
+        topic=topic_title,
+        query=q2,
+        tag="r2-hot",
+        stamp=stamp,
+        round_no=2,
+        count=count,
+        time_range="7d",
+        fetch_top=False,
+    )
+    collected.append(r2)
+    prior_items.extend(r2["items"])
 
-    for tag, query in queries:
-        data = await web_search(query, count=8, time_range="7d")
-        md = format_markdown(data)
-        fname = f"{stamp}_{person}_{tag}_volc.md"
-        fpath = SEARCH_DIR / fname
-        _save_md(fpath, query=query, person=person, topic=topic_title, body=md)
-        files.append(str(fpath))
-        all_bullets.extend(_bullets_from_md(md))
+    if rounds >= 3:
+        from research_bundle import _pick_followup_keywords  # noqa: E402
+
+        focus = _pick_followup_keywords(person, kw, prior_items)
+        q3 = f"{person} {focus} 经过 细节"
+        r3 = await _search_round(
+            person=person,
+            topic=topic_title,
+            query=q3[:40],
+            tag="r3-focus",
+            stamp=stamp,
+            round_no=3,
+            count=count,
+            time_range="7d",
+            fetch_top=False,
+        )
+        collected.append(r3)
+        prior_items.extend(r3["items"])
+
+    if rounds >= 4:
+        q4 = f"{person} {kw} 采访 原话 媒体"
+        r4 = await _search_round(
+            person=person,
+            topic=topic_title,
+            query=q4[:40],
+            tag="r4-quote",
+            stamp=stamp,
+            round_no=4,
+            count=count,
+            time_range="30d",
+            fetch_top=True,
+        )
+        collected.append(r4)
+
+    bundle = build_bundle(person=person, topic_title=topic_title, rounds=collected)
+    bundle_path = SEARCH_DIR / f"{stamp}_{_safe_slug(person)}_bundle.json"
+    bundle_path.write_text(json.dumps(bundle, ensure_ascii=False, indent=2), encoding="utf-8")
+    save_bundle_md(SEARCH_DIR / f"{stamp}_{_safe_slug(person)}_bundle.md", bundle)
 
     return {
         "person": person,
         "topic_title": topic_title,
-        "queries": [q1, q2],
-        "search_files": files,
-        "bullets": all_bullets[:12],
+        "rounds": len(collected),
+        "queries": bundle["queries"],
+        "search_files": [r["file"] for r in collected],
+        "bundle_file": str(bundle_path),
+        "bundle": bundle,
+        # legacy fields for older compose
+        "bullets": bundle.get("facts", [])[:12],
     }
 
 
 def main() -> None:
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(description="Multi-round volc research for entertainment articles")
     p.add_argument("--person", required=True)
     p.add_argument("--topic", required=True, help="Hot search title")
     p.add_argument("--stamp", default=datetime.now(BJ).strftime("%Y%m%d"))
+    p.add_argument("--rounds", type=int, default=4, choices=[2, 3, 4])
     p.add_argument("--json-out", default="")
     args = p.parse_args()
 
-    result = asyncio.run(research(args.person, args.topic, stamp=args.stamp))
-    out = json.dumps(result, ensure_ascii=False, indent=2)
+    if not __import__("os").environ.get("VOLC_SEARCH_API_KEY"):
+        print("Missing VOLC_SEARCH_API_KEY", file=sys.stderr)
+        sys.exit(1)
+
+    result = asyncio.run(
+        research(args.person, args.topic, stamp=args.stamp, rounds=args.rounds)
+    )
+    # shrink bundle in stdout (full in bundle_file)
+    slim = {k: v for k, v in result.items() if k != "bundle"}
+    slim["facts_count"] = len(result.get("bundle", {}).get("facts", []))
+    slim["numbers"] = result.get("bundle", {}).get("numbers", [])[:6]
+    out = json.dumps(slim, ensure_ascii=False, indent=2)
     if args.json_out:
-        Path(args.json_out).write_text(out, encoding="utf-8")
+        Path(args.json_out).write_text(
+            json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
     print(out)
 
 
