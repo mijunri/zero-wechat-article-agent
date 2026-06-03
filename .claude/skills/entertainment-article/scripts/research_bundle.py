@@ -11,6 +11,14 @@ _VOLC = Path(__file__).resolve().parents[2] / "volc-search" / "scripts"
 sys.path.insert(0, str(_VOLC))
 from parse_results import extract_numbers, extract_quotes, merge_items  # noqa: E402
 
+try:
+    from fact_rank import rank_facts  # noqa: E402
+    from meme_harvest import extract_memes_from_rounds, fallback_memes  # noqa: E402
+except ImportError:
+    rank_facts = None  # type: ignore
+    extract_memes_from_rounds = None  # type: ignore
+    fallback_memes = lambda *_a, **_k: []  # type: ignore
+
 
 def _pick_followup_keywords(person: str, topic: str, items: list[dict[str, Any]]) -> str:
     """Choose round-3 focus from prior snippets (simple keyword harvest)."""
@@ -75,12 +83,19 @@ def build_bundle(
     numbers = extract_numbers(blob)
     quotes = extract_quotes(blob, person)
     raw_facts = [i.get("text") for i in merged if len(i.get("text") or "") > 20]
+    memes: list[str] = []
     try:
-        from fact_rank import rank_facts  # noqa: WPS433
-
-        facts = rank_facts(raw_facts, topic_title, person, limit=12)
+        if rank_facts:
+            facts = rank_facts(raw_facts, topic_title, person, limit=12)
+        else:
+            facts = raw_facts[:10]
+        if extract_memes_from_rounds:
+            memes = extract_memes_from_rounds(rounds, topic_title, limit=10)
+        if len(memes) < 3:
+            memes = memes + [m for m in fallback_memes(topic_title) if m not in memes]
     except Exception:
         facts = raw_facts[:10]
+        memes = fallback_memes(topic_title)
     sources = [
         {"title": i.get("title"), "site": i.get("site"), "url": i.get("url")}
         for i in merged[:8]
@@ -104,6 +119,7 @@ def build_bundle(
         "round_count": len(rounds),
         "queries": [r.get("query") for r in rounds],
         "facts": facts,
+        "memes": memes[:10],
         "numbers": numbers,
         "quotes": quotes,
         "sources": sources,
@@ -126,6 +142,10 @@ def save_bundle_md(path: Path, bundle: dict[str, Any]) -> None:
         lines.append(f"{i}. {f}")
     if bundle.get("numbers"):
         lines.append("\n## 数字\n" + "、".join(bundle["numbers"][:8]))
+    if bundle.get("memes"):
+        lines.append("\n## 梗 / 神评论")
+        for m in bundle["memes"]:
+            lines.append(f"- {m}")
     if bundle.get("quotes"):
         lines.append("\n## 原话/回应")
         for q in bundle["quotes"]:

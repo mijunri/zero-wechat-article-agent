@@ -131,13 +131,13 @@ async def research(
     collected.append(r1)
     prior_items.extend(r1["items"])
 
-    # R2 舆论/原话/网友反应
-    q2 = f"{person} {ev or kw} 网友 评论 原话 媒体"[:40]
+    # R2 深度：梗 / 神评论 / 段子（必读，写活文章）
+    q2 = f"{person} {ev or kw} 梗 神评论 段子 玩梗"[:40]
     r2 = await _search_round(
         person=person,
         topic=topic_title,
         query=q2,
-        tag="r2-hot",
+        tag="r2-meme",
         stamp=stamp,
         round_no=2,
         count=c2,
@@ -148,36 +148,36 @@ async def research(
     prior_items.extend(r2["items"])
 
     if rounds >= 3:
-        from research_bundle import _pick_followup_keywords  # noqa: E402
-
-        focus = _pick_followup_keywords(person, kw, prior_items)
-        q3 = f"{person} {focus} 经过 细节"
+        q3 = f"{person} {ev or kw} 微博 评论区 热梗 金句"[:40]
         r3 = await _search_round(
             person=person,
             topic=topic_title,
-            query=q3[:40],
-            tag="r3-focus",
+            query=q3,
+            tag="r3-meme-deep",
             stamp=stamp,
             round_no=3,
             count=count,
             time_range="7d",
-            fetch_top=False,
+            fetch_top=True,
         )
         collected.append(r3)
         prior_items.extend(r3["items"])
 
     if rounds >= 4:
-        q4 = f"{person} {kw} 采访 原话 媒体"
+        from research_bundle import _pick_followup_keywords  # noqa: E402
+
+        focus = _pick_followup_keywords(person, kw, prior_items)
+        q4 = f"{person} {focus or ev} 细节 经过 原话"[:40]
         r4 = await _search_round(
             person=person,
             topic=topic_title,
-            query=q4[:40],
-            tag="r4-quote",
+            query=q4,
+            tag="r4-detail",
             stamp=stamp,
             round_no=4,
             count=count,
-            time_range="30d",
-            fetch_top=True,
+            time_range="14d",
+            fetch_top=False,
         )
         collected.append(r4)
 

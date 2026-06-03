@@ -23,7 +23,7 @@ flowchart LR
 | 1 | `hot-topics` → `fetch_entertainment_hot.py` | 微博/抖音/头条 API | `hot.json` items | 当日娱乐向热搜池 |
 | 2 | `entertainment_filter` | 热榜标题 | 过滤后 items | 去掉时政/宏观/灾害 |
 | 3 | `extract_person.py` | 热搜标题 | `person` | 检索与 SEO 主实体 |
-| 4 | `research_topic.py` + `volc-search` | person + topic | `data/searchdata/*_volc.md` | R1 广度 / R2 深度 / R3 聚焦 / R4 原话 |
+| 4 | `research_topic.py` + `volc-search` | person + topic | `*_volc.md` + `memes[]` | R1 事件 / **R2–R3 梗与神评** / R4 细节原话 |
 | 5 | `research_bundle.py` | 各轮 items | `*_bundle.json`（≤30 facts） | 去重、抽数字/原话/来源 |
 | 6 | `fact_rank.py` | bundle facts | 事件相关素材 | 过滤百科/履历 junk，按热搜关键词排序 |
 | 7 | `compose_from_research.py` + `editorial_compose.py` | hot + research | `article.json` + HTML | **叙事段落 + 编辑观点**（禁止逐条缝合百科） |
@@ -38,13 +38,13 @@ flowchart LR
 | 日产 | `pipeline_daily_toutiao_entertainment.py` | 4 | 8 | 每日 5 篇，成本可控 |
 | 演示/深研 | `demo_toutiao_full_report.py` | 4 | R1=10, R2=10 | 广 10 + 深 10，bundle 最多 30 facts |
 
-## 成稿结构（short，编辑模式）
+## 成稿结构（short，有梗模式）
 
-1. **开头**：直接甩热搜爆点（如誓词「没有贫穷」），带热度  
-2. **到底发生了什么**：2–3 段**叙事**（从 ranked facts 合并句子，不是百科列表）  
-3. **原话/回应**（有则写，过滤百科碎片）  
-4. **大家愣着不说的那句**：潜台词观点（不写热度；写「大家都懂但没人点破」的句子）  
-5. **你咋看** + 收束 + 免责声明  
+1. **开头**：爆点 + 可选最强梗一句  
+2. **{人名}到底干了啥**：2 段事实  
+3. **名场面梗合集**：`memes[]` 信息框逐条列出  
+4. **扎心一句**：潜台词（禁止「你咋看」）  
+5. **收束** + 免责声明  
 
 **禁止**：
 - 正文任何位置出现「据××报道」「据报道」「报道里提到」

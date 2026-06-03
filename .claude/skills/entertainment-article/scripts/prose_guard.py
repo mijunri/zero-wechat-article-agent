@@ -15,6 +15,11 @@ _FORBIDDEN = [
     (re.compile(r"口径以原报道为准[。.]?"), ""),
     (re.compile(r"报道里(?:还)?提到[，,]?\s*"), ""),
     (re.compile(r"公开信息整理\s*\+\s*编辑判断"), "编辑整理"),
+    (re.compile(r"你咋看[？?]?"), ""),
+    (re.compile(r"欢迎评论区[^。]*[。.]?"), ""),
+    (re.compile(r"评论区见[^。]*[。.]?"), ""),
+    (re.compile(r"你品品[，,]"), ""),
+    (re.compile(r"评论区[^。]{0,20}(?:一句话|总结)[，,]?"), ""),
 ]
 
 _BROKEN_TAIL = re.compile(r"[，,]?\s*[\"\"」』]\s*$")

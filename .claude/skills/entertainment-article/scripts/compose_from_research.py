@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Compose entertainment article — 编辑重述 + 潜台词观点。
-硬性禁止：据××报道、百科缝合、搜索残句直贴。
+头条娱乐成稿：有梗、能扫读、有判断；禁止你咋看/据××报道/搜索残句。
 """
 from __future__ import annotations
 
@@ -14,16 +13,13 @@ from typing import Any
 from de_ai_polish import polish
 from editorial_compose import (
     closing_line,
-    h2_debate,
     h2_event,
-    h2_reader,
-    h2_unsaid,
+    h2_punchline,
     hook_opening,
     pick_angle,
-    vow_highlight_box,
-    write_debate_layer,
     write_event_narrative,
-    write_unsaid_truth,
+    write_meme_section,
+    write_punchline,
 )
 from fact_rank import rank_facts
 from html_render import box, render
@@ -39,27 +35,30 @@ THEME = {
     "general": "#e67e22",
 }
 
-SHORT_MIN = 1000
+SHORT_MIN = 900
 LONG_MIN = 1800
 
 
 def _classify(title: str) -> str:
-    t = title
-    if re.search(r"婚礼|婚纱|婚纱照|誓词", t):
+    if re.search(r"婚礼|婚纱|婚纱照|誓词", title):
         return "wedding"
-    if re.search(r"淘汰|综艺|歌手|浪姐", t):
-        return "variety"
-    if re.search(r"剧|剧情|杀青|剧透", t):
-        return "drama"
-    if re.search(r"恋|分手|离婚|出轨|官宣", t):
+    if re.search(r"恋|分手|离婚|出轨|官宣", title):
         return "gossip"
     return "general"
 
 
-def _emit_para(sections: list[tuple], text: str) -> None:
+def _emit_para(sections: list[tuple], text: str, *, force: bool = False) -> None:
     text = guard_prose(polish(text))
-    if paragraph_ok(text):
+    if force or paragraph_ok(text):
         sections.append(("p", text))
+
+
+def _emit_meme_list(sections: list[tuple], paras: list[str]) -> None:
+    """多条梗合并成一个信息框，扫读友好。"""
+    if not paras:
+        return
+    body = "<br>".join(paras)
+    sections.append(("box", body))
 
 
 def build_sections_short(
@@ -70,53 +69,45 @@ def build_sections_short(
     kind: str,
 ) -> tuple[list[tuple], int, str]:
     raw_facts: list[str] = bundle.get("facts") or []
-    ranked = rank_facts(raw_facts, hot_title, person, limit=12)
+    ranked = rank_facts(raw_facts, hot_title, person, limit=8)
+    memes: list[str] = bundle.get("memes") or []
     angle = pick_angle(hot_title, person, kind)
 
     sections: list[tuple] = []
-    _emit_para(sections, hook_opening(person, hot_title, angle))
+    _emit_para(sections, hook_opening(person, hot_title, memes))
 
     sections.append(("h2", h2_event(person)))
     event_paras = write_event_narrative(person, hot_title, kind)
     for para in event_paras:
-        _emit_para(sections, para)
+        _emit_para(sections, para, force=True)
+
+    meme_h2, meme_paras = write_meme_section(memes, hot_title)
+    if meme_h2 and meme_paras:
+        sections.append(("h2", meme_h2))
+        _emit_meme_list(sections, meme_paras)
 
     if "誓词" in hot_title or "贫穷" in hot_title:
-        sections.append(("box", vow_highlight_box(person)))
+        sections.append(
+            (
+                "box",
+                guard_prose(
+                    polish(
+                        "誓词模板对照｜标准：无论贫穷还是富贵，疾病还是健康。"
+                        "他的：无论顺境还是低谷，热闹还是安静——缺的是「穷」那一档。"
+                    )
+                ),
+            )
+        )
 
-    debate = write_debate_layer(person, hot_title, [])
-    if debate:
-        sections.append(("h2", h2_debate()))
-        for para in debate:
-            _emit_para(sections, para)
+    sections.append(("h2", h2_punchline(), "bg:#9b59b6"))
+    for para in write_punchline(person, hot_title, kind, ranked):
+        _emit_para(sections, para, force=True)
 
-    unsaid = write_unsaid_truth(person, hot_title, kind, ranked)
-    sections.append(("h2", h2_unsaid(), "bg:#9b59b6"))
-    for para in unsaid:
-        _emit_para(sections, para)
-
-    sections.append(("h2", h2_reader(), "bg:#d4636a"))
-    _emit_para(
-        sections,
-        f"你更在意{person}删词，还是在意他夸妻子那套话术？"
-        f"或者你觉得誓词本来就该私人化、不该被全网审判？"
-        f"带一句你自己的判断来聊，比复制梗图有用。",
-    )
     _emit_para(sections, closing_line(person, hot_title))
-    _emit_para(sections, "（编辑整理，不含未证实爆料；发布前请人工核对。）")
+    _emit_para(sections, "（编辑整理，不含未证实爆料。）")
 
-    used = len(event_paras)
+    used = len(event_paras) + len(meme_paras)
     return sections, used, angle
-
-
-def build_sections_long(
-    person: str,
-    hot_title: str,
-    bundle: dict[str, Any],
-    *,
-    kind: str,
-) -> tuple[list[tuple], int, str]:
-    return build_sections_short(person, hot_title, bundle, kind=kind)
 
 
 def compose(
@@ -131,6 +122,7 @@ def compose(
             "person": research.get("person"),
             "topic_title": research.get("topic_title"),
             "facts": research.get("bullets"),
+            "memes": [],
             "numbers": [],
             "quotes": [],
             "sources": [],
@@ -146,8 +138,7 @@ def compose(
     color = THEME.get(kind, THEME["general"])
     title = seo_title(person, hot_title, bundle)
 
-    builder = build_sections_long if article_type == "long" else build_sections_short
-    sections, facts_used, angle = builder(person, hot_title, bundle, kind=kind)
+    sections, facts_used, angle = build_sections_short(person, hot_title, bundle, kind=kind)
     html = render(person, title, color, sections)
     plain = re.sub(r"<[^>]+>", "", html)
     char_count = count_han(plain)
@@ -164,8 +155,9 @@ def compose(
 
     meta = {
         "pipeline": "toutiao-entertainment",
-        "compose_mode": "editorial-rewrite",
+        "compose_mode": "meme-editorial",
         "angle": angle,
+        "meme_count": len(bundle.get("memes") or []),
         "person": person,
         "hot_title": hot_title,
         "facts_in_bundle": len(bundle.get("facts") or []),
@@ -175,7 +167,6 @@ def compose(
         "seo_check": seo_check,
         "char_count": char_count,
         "min_chars": min_chars,
-        "forbidden": "no_据xx报道",
     }
     html = inject_meta(html, meta)
 
@@ -188,6 +179,7 @@ def compose(
         "kind": kind,
         "article_type": article_type,
         "angle": angle,
+        "memes_used": len(bundle.get("memes") or []),
         "source_url": hot_item.get("url") or "",
         "search_files": research.get("search_files") or [],
         "bundle_file": research.get("bundle_file") or "",
@@ -213,19 +205,15 @@ def main() -> None:
     if args.html_out:
         Path(args.html_out).write_text(article["content_html"], encoding="utf-8")
 
-    min_chars = LONG_MIN if args.article_type == "long" else SHORT_MIN
+    min_chars = SHORT_MIN
     print(
         json.dumps(
             {
                 "out": args.out,
                 "title": article["title"],
                 "char_count": article["char_count"],
-                "person": article["person"],
-                "angle": article.get("angle"),
-                "rounds": article.get("research_rounds"),
+                "memes_used": article.get("memes_used"),
                 "seo_score": article.get("seo_check", {}).get("seo_score"),
-                "seo_grade": article.get("seo_check", {}).get("seo_grade"),
-                "min_chars": min_chars,
                 "ok": article["char_count"] >= min_chars,
             },
             ensure_ascii=False,
