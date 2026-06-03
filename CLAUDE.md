@@ -7,8 +7,12 @@
 全自动流水线默认上传到 **`mongo`**（`authokylw4260@gmail.com`）的产物库。  
 请用 **mongo 账号** 登录浏览器查看：http://manage.foxrouter.com/app/deliverables?platform=wechat
 
-凭证：`.claude/skills/zero-deliverables/scripts/agent.env`（gitignore，Key 名 `wechat-auto-pipeline`）  
-或环境变量 `ZAM_API_KEY`。
+凭证（已写入各 Skill 的 `scripts/agent.env`，便于本地调试）：
+
+| Skill | 文件 |
+|-------|------|
+| Twitter | `.claude/skills/zero-twitter-collect/scripts/agent.env` → `twitter_api_key` |
+| 指挥台 | `.claude/skills/zero-deliverables/scripts/agent.env` → `ZAM_API_KEY`（mongo） |
 
 核对：
 

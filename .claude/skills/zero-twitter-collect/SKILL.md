@@ -18,11 +18,11 @@ metadata:
 
 ```bash
 SKILL_DIR="${CLAUDE_SKILL_DIR}"
-export twitter_api_key="..."   # 或已在 shell / 部署环境中配置
+source "${SKILL_DIR}/scripts/env.sh"
 bash "${SKILL_DIR}/scripts/verify.sh"
 ```
 
-凭证：环境变量 **`twitter_api_key`**（TwitterAPI.io API Key）。可选 `source scripts/env.sh` 加载本地 `scripts/agent.env`（gitignore）。
+凭证：`scripts/agent.env` 中的 **`twitter_api_key`**（已入库，本地调试可直接 `source env.sh`）。
 
 ## CLI
 

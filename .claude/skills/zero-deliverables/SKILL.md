@@ -22,7 +22,7 @@ source "${SKILL_DIR}/scripts/env.sh"
 bash "${SKILL_DIR}/scripts/verify.sh"
 ```
 
-凭证在 `scripts/agent.env`（已配置 `ZAM_API_KEY`，勿提交到公开仓库）。
+凭证在 `scripts/agent.env`（`ZAM_API_KEY` + `ZAM_API_BASE`，已入库便于本地调试）。
 
 ## CLI
 
