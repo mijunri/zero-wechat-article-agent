@@ -108,29 +108,31 @@ async def research(
     c1 = broad_count if broad_count is not None else count
     c2 = deep_count if deep_count is not None else count
     from extract_person import topic_keywords  # noqa: E402
+    from fact_rank import event_keywords  # noqa: E402
 
     kw = topic_keywords(topic_title, person)
+    ev = " ".join(event_keywords(topic_title, person)[:4])
     collected: list[dict] = []
     prior_items: list[dict] = []
 
-    # R1 广度
-    q1 = f"{person} 个人经历 出道 背景"
+    # R1 事件/热点（优先写「这件事」，不写百科履历）
+    q1 = f"{person} {ev or kw} 怎么回事 细节 回应"[:40]
     r1 = await _search_round(
         person=person,
         topic=topic_title,
         query=q1,
-        tag="r1-breadth",
+        tag="r1-event",
         stamp=stamp,
         round_no=1,
         count=c1,
-        time_range=time_range,
+        time_range="7d",
         fetch_top=False,
     )
     collected.append(r1)
     prior_items.extend(r1["items"])
 
-    # R2 热点深度
-    q2 = f"{person} {kw} 详细 回应"
+    # R2 舆论/原话/网友反应
+    q2 = f"{person} {ev or kw} 网友 评论 原话 媒体"[:40]
     r2 = await _search_round(
         person=person,
         topic=topic_title,

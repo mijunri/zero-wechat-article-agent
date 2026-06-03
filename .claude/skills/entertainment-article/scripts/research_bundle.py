@@ -74,7 +74,13 @@ def build_bundle(
 
     numbers = extract_numbers(blob)
     quotes = extract_quotes(blob, person)
-    facts = [i.get("text") for i in merged if len(i.get("text") or "") > 20][:30]
+    raw_facts = [i.get("text") for i in merged if len(i.get("text") or "") > 20]
+    try:
+        from fact_rank import rank_facts  # noqa: WPS433
+
+        facts = rank_facts(raw_facts, topic_title, person, limit=12)
+    except Exception:
+        facts = raw_facts[:10]
     sources = [
         {"title": i.get("title"), "site": i.get("site"), "url": i.get("url")}
         for i in merged[:8]

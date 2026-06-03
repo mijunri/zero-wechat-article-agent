@@ -25,8 +25,9 @@ flowchart LR
 | 3 | `extract_person.py` | 热搜标题 | `person` | 检索与 SEO 主实体 |
 | 4 | `research_topic.py` + `volc-search` | person + topic | `data/searchdata/*_volc.md` | R1 广度 / R2 深度 / R3 聚焦 / R4 原话 |
 | 5 | `research_bundle.py` | 各轮 items | `*_bundle.json`（≤30 facts） | 去重、抽数字/原话/来源 |
-| 6 | `compose_from_research.py` | hot + research | `article.json` + HTML | 结构化正文（4–8 条 fact） |
-| 7 | `seo_optimize.py` | 标题/正文/人名 | `seo_check` 打分与标题优化 | 搜一搜/头条可读性与关键词 |
+| 6 | `fact_rank.py` | bundle facts | 事件相关素材 | 过滤百科/履历 junk，按热搜关键词排序 |
+| 7 | `compose_from_research.py` + `editorial_compose.py` | hot + research | `article.json` + HTML | **叙事段落 + 编辑观点**（禁止逐条缝合百科） |
+| 8 | `seo_optimize.py` | 标题/正文/人名 | `seo_check` | 搜一搜/头条可读性 |
 | 8 | `de_ai_polish.py` | 段落文本 | 去 AI 味句式 | 更像资讯稿 |
 | 9 | `publish_toutiao.py` | article.json | manage 产物 id | 指挥台预览与人工改稿 |
 
@@ -37,13 +38,15 @@ flowchart LR
 | 日产 | `pipeline_daily_toutiao_entertainment.py` | 4 | 8 | 每日 5 篇，成本可控 |
 | 演示/深研 | `demo_toutiao_full_report.py` | 4 | R1=10, R2=10 | 广 10 + 深 10，bundle 最多 30 facts |
 
-## 成稿结构（short）
+## 成稿结构（short，编辑模式）
 
-1. **导语**：人名 + 热搜事件 + 热度/数字钩子  
-2. **主体 h2**：含人名的信息段（4–8 条可核实 fact，带「据××报道」）  
-3. **原话 h2**（有则写）  
-4. **数字 box**（有则写）  
-5. **互动收尾**：「你咋看」+ 免责声明  
+1. **开头**：直接甩热搜爆点（如誓词「没有贫穷」），带热度  
+2. **到底发生了什么**：2–3 段**叙事**（从 ranked facts 合并句子，不是百科列表）  
+3. **原话/回应**（有则写，过滤百科碎片）  
+4. **说句实在的**：明确编辑观点（理解向，但有判断）  
+5. **你咋看** + 收束 + 免责声明  
+
+**禁止**：连续 6 段「据抖音百科报道，出生于1995…」式履历缝合。
 
 体裁 `long` 时 fact 上限更高、字数目标 ≥1800。
 
