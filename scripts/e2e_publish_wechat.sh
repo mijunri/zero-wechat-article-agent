@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
-# End-to-end: brief → HTML → manage.foxrouter.com (platform=wechat)
+# Full auto (collect + write + upload). Pass a brief path only for manual override.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BRIEF="${1:-${ROOT}/examples/brief-daily-ai.json}"
-
-if [[ -z "${ZAM_API_KEY:-}" ]]; then
-  echo "Export ZAM_API_KEY first" >&2
-  exit 1
+if [[ -n "${1:-}" ]]; then
+  export ZAM_API_KEY="${ZAM_API_KEY:?}"
+  python3 "${ROOT}/.claude/skills/zero-wechat-article-write/scripts/write_article.py" pipeline \
+    --brief-file "$1"
+else
+  exec python3 "${ROOT}/scripts/auto_daily_wechat.py"
 fi
-
-bash "${ROOT}/.claude/skills/zero-deliverables/scripts/verify.sh"
-python3 "${ROOT}/.claude/skills/zero-wechat-article-write/scripts/write_article.py" pipeline \
-  --brief-file "${BRIEF}"
