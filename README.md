@@ -15,12 +15,19 @@
 | `zero-wechat-article-write` | brief → 微信 HTML → 指挥台 |
 | `zero-deliverables` | [指挥台产物](http://manage.foxrouter.com/app/deliverables?platform=wechat) |
 | `zero-wechat-auto` | 一键：`pipeline_top_article.py` |
+| `hot-topics` | 微博/抖音/头条等热榜（60s API） |
+| `zero-toutiao-entertainment` | 头条号娱乐新闻，每日 3 篇 |
 
 ```bash
 pip install -e .
-source .claude/skills/zero-twitter-collect/scripts/env.sh
 source .claude/skills/zero-deliverables/scripts/env.sh
+
+# 公众号：AttentionVC #1 深度稿
+source .claude/skills/zero-twitter-collect/scripts/env.sh
 python3 scripts/pipeline_top_article.py
+
+# 头条号：娱乐热点 ×3
+python3 scripts/pipeline_daily_toutiao_entertainment.py
 ```
 
 ## 能力范围

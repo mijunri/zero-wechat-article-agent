@@ -1,6 +1,20 @@
 # zero-wechat-article-agent — 指挥手册
 
-> **AI 知识博主** 微信公众号：从 AttentionVC 热榜第 1 名长文出发，拉取 X 原文 → 中文理解 → 中文成稿 → 指挥台发布。
+> **AI 知识博主** 子代理：微信公众号（深度长文）+ 头条号（每日娱乐热点 ×3）。
+
+## 头条号娱乐日产线
+
+```text
+hot-topics (微博/抖音/头条热榜) → 娱乐过滤 → 成稿 → 质检 → platform=toutiao
+```
+
+```bash
+python3 scripts/pipeline_daily_toutiao_entertainment.py
+```
+
+预览：http://manage.foxrouter.com/app/deliverables?platform=toutiao
+
+## 微信公众号流水线
 
 ## 标准流水线（当前版本）
 
@@ -55,6 +69,8 @@ python3 .claude/skills/zero-wechat-article-write/scripts/write_article.py pipeli
 | `zero-twitter-collect` | `get_tweet_article.py` 拉完整长文 |
 | `zero-wechat-article-write` | brief → HTML |
 | `zero-deliverables` | 上传指挥台 |
+| `hot-topics` | 60s 热榜 API（上游 skill） |
+| `zero-toutiao-entertainment` | 头条号娱乐每日 3 篇 |
 | `zero-wechat-article` | 微信公众号后台 API（未接） |
 
 ## 凭证（scripts/agent.env）

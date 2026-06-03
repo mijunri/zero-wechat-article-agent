@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "hot-topics": {
+      "source": "vikiboss/60s-skills",
+      "sourceType": "github",
+      "skillPath": "skills/hot-topics/SKILL.md",
+      "computedHash": "4b839c176891c156e406663537555aedb2818cd51b3a0c6474678552d25f034b"
+    }
+  }
+}

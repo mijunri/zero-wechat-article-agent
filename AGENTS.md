@@ -11,7 +11,12 @@
 | `zero-wechat-article-write` | `.claude/skills/zero-wechat-article-write/SKILL.md` |
 | `zero-deliverables` | `.claude/skills/zero-deliverables/SKILL.md` |
 | `zero-wechat-article` | `.claude/skills/zero-wechat-article/SKILL.md` |
+| `hot-topics` | `.claude/skills/hot-topics/SKILL.md` |
+| `zero-toutiao-entertainment` | `.claude/skills/zero-toutiao-entertainment/SKILL.md` |
 
 ## 默认交付
 
-写完公众号 HTML 后，**必须**调用 `zero-deliverables` 上传到 `platform=wechat`，并在指挥台可预览。
+- 公众号：`platform=wechat`（`pipeline_top_article.py`）
+- 头条号娱乐：`platform=toutiao`，每日 3 篇（`pipeline_daily_toutiao_entertainment.py`）
+
+`hot-topics` 安装：`npx skills add https://github.com/vikiboss/60s-skills --skill hot-topics`（仓库已同步至 `.claude/skills/hot-topics`）。
