@@ -1,0 +1,41 @@
+{
+  "title": "今日 AI 速递：英伟达联手微软，Sam Altman 谈美国 AI 行政令",
+  "cover_url": "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&q=80",
+  "lead": "过去 24 小时，产业界两条信号值得 AI 从业者关注：终端 Agent 治理上云、以及美国 AI 监管框架的新表态。",
+  "sections": [
+    {
+      "h2": "英伟达 × 微软：Windows 上的 Agent 运行时",
+      "paragraphs": [
+        "英伟达宣布与微软合作，在 Windows 上推进「安全、用户可控」的 AI 体验。核心组件是 NVIDIA OpenShell 运行时，面向 Agent 场景提供治理工具、策略执行，以及本地与云端之间的智能查询路由。",
+        "对普通用户而言，这意味着未来的 Copilot 类助手可能更容易在「本地隐私」与「云端能力」之间自动权衡；对开发者而言，值得关注的是 Agent 策略如何标准化——谁能在本机跑什么工具、访问哪些数据，将变成平台级能力。"
+      ],
+      "image": "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=900&q=80"
+    },
+    {
+      "h2": "Sam Altman：创新与安全如何平衡",
+      "paragraphs": [
+        "OpenAI CEO Sam Altman 在 X 上评论美国新的 AI 相关行政令，认为美国应继续研发最强模型、确保模型安全，并把网络防御工具交给「可信防御方」。",
+        "这条表态释放的信号是：头部 lab 希望监管框架明确区分「前沿模型研发」与「安全/国防用途」，避免一刀切限制训练与部署。对公众号读者，可理解为——2026 年的竞争不仅是模型榜单，更是合规叙事与生态位之争。"
+      ]
+    },
+    {
+      "h2": "给 AI 知识博主的三条选题建议",
+      "paragraphs": [
+        "1）拆解「本地 Agent vs 云 Agent」：结合 OpenShell 消息，用一张表对比延迟、隐私、成本。",
+        "2）行政令通俗读：不搬运全文，只回答「对创业者/开发者有什么影响」。",
+        "3）工具向：延续 Claude Code 教程热度，做一篇「10 分钟搭 AI 资讯页」实操。"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "label": "NVIDIA on X",
+      "url": "https://x.com/nvidia/status/2061961069212377313"
+    },
+    {
+      "label": "Sam Altman on X",
+      "url": "https://x.com/sama/status/2061973280655904815"
+    }
+  ],
+  "footer": "本文由 zero-wechat-article-agent 流水线生成并入库指挥台，仅供内部选题与预览；发布前请人工润色。"
+}
