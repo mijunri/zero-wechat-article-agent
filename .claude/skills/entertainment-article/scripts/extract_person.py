@@ -20,6 +20,12 @@ def extract_person(title: str) -> str:
     # 剧名/电影名开头：用整段话题作检索主体
     if re.match(r"^(电影|剧集|电视剧|综艺|歌手|浪姐)", t) or t.endswith(("确认引进", "爽开爽走", "官宣延期")):
         return t[:6] if len(t) > 6 else t
+    # 何猷君婚礼… → 何猷君（全名在标题中部）
+    m_full = re.search(r"([\u4e00-\u9fff]{2,3}君)", t)
+    if m_full and ("婚礼" in t or "誓词" in t):
+        return m_full.group(1)
+    if re.match(r"^(退休|国企|夫妻|女子|老人|如何)", t):
+        return t[:8] if len(t) > 8 else t
     m_photo = re.search(r"([\u4e00-\u9fff]{2,3})婚纱照", t)
     if m_photo:
         return m_photo.group(1)

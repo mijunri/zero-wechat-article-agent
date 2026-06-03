@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Compose entertainment article from research bundle.
-短篇：事件叙事 + 编辑观点（禁止百科 fact 逐条缝合）。
+Compose entertainment article — 厚信息 + 潜台词观点（禁止热度套话、百科缝合）。
 """
 from __future__ import annotations
 
@@ -14,12 +13,16 @@ from typing import Any
 from de_ai_polish import polish
 from editorial_compose import (
     closing_line,
+    extract_netizen_lines,
+    h2_debate,
     h2_event,
-    h2_opinion,
     h2_reader,
+    h2_unsaid,
     hook_opening,
     pick_angle,
-    write_opinion,
+    wedding_facts_block,
+    write_debate_layer,
+    write_unsaid_truth,
 )
 from fact_rank import merge_facts_to_paragraphs, rank_facts
 from html_render import box, render
@@ -34,14 +37,12 @@ THEME = {
     "general": "#e67e22",
 }
 
-SHORT_MIN = 800
+SHORT_MIN = 1000
 LONG_MIN = 1800
 
 
 def _classify(title: str) -> str:
     t = title
-    if re.search(r"不想|不敢|不愿", t) and "结婚" in t:
-        return "gossip"
     if re.search(r"婚礼|婚纱|婚纱照|誓词", t):
         return "wedding"
     if re.search(r"淘汰|综艺|歌手|浪姐", t):
@@ -57,39 +58,15 @@ def _extract_vow_snippet(facts: list[str]) -> str:
     for f in facts:
         if "无论顺境" in f or "低谷" in f:
             m = re.search(
-                r"(以后)?无论顺境[^。]{8,90}|无论顺境还是低谷[^。]{0,40}",
+                r"以后[^。]{0,20}无论顺境[^。]{8,120}|无论顺境还是低谷[^。]{0,80}",
                 f,
             )
             if m:
-                return m.group(0).strip() + "。"
+                s = m.group(0).strip()
+                if not s.endswith("。"):
+                    s += "。"
+                return s
     return ""
-
-
-def _filter_quotes(quotes: list[str], person: str) -> list[str]:
-    out: list[str] = []
-    skip = (
-        "本文作者",
-        "责任编辑",
-        "版权",
-        "目录序言",
-        "个人资料",
-        "抖音百科",
-        "微博认证",
-        "军事博主",
-        "起源：",
-        "：一份",
-    )
-    for q in quotes:
-        q = (q or "").strip()
-        if len(q) < 20 or len(q) > 90:
-            continue
-        if any(s in q for s in skip):
-            continue
-        if "无论" in q or "顺境" in q or "低谷" in q or "爱你" in q:
-            out.append(q)
-        elif person in q and ("说" in q or "表示" in q or "承诺" in q):
-            out.append(q)
-    return out
 
 
 def _source_line(sources: list[dict]) -> str:
@@ -101,82 +78,96 @@ def _source_line(sources: list[dict]) -> str:
     return "、".join(parts) if parts else "多家媒体"
 
 
+def _meaningful_numbers(numbers: list[str]) -> list[str]:
+    keep: list[str] = []
+    for n in numbers or []:
+        if re.match(r"^\d{4}年?$", n):
+            continue
+        if n in ("4.2", "2次", "06", "03", "22", "43"):
+            continue
+        if "月" in n or "日" in n or "小时" in n or "年" in n or "亿" in n or "万" in n:
+            keep.append(n)
+    return keep[:5]
+
+
 def build_sections_short(
     person: str,
     hot_title: str,
     bundle: dict[str, Any],
     *,
-    hot_value: int | None,
     kind: str,
 ) -> tuple[list[tuple], int, str]:
     raw_facts: list[str] = bundle.get("facts") or []
-    ranked = rank_facts(raw_facts, hot_title, person, limit=10)
-    quotes = _filter_quotes(bundle.get("quotes") or [], person)
+    ranked = rank_facts(raw_facts, hot_title, person, limit=12)
     sources = bundle.get("sources") or []
     sites = _source_line(sources)
     angle = pick_angle(hot_title, person, kind)
+    netizen = extract_netizen_lines(ranked)
 
     sections: list[tuple] = []
-    sections.append(("p", hook_opening(person, hot_title, hot_value, angle)))
+    sections.append(("p", hook_opening(person, hot_title, angle)))
 
+    sections.append(("h2", h2_event(person)))
     if kind == "wedding" and ("誓词" in hot_title or "婚礼" in hot_title):
-        sections.append(
-            (
-                "p",
-                polish(
-                    f"背景很简单：{person}和奚梦瑶在法国补办婚礼，誓词没走「无论贫穷还是富贵」那套，"
-                    f"而是换成「顺境与低谷」「热闹还是安静」——热搜炸的点，就在「贫穷」二字被整段删掉了。"
-                ),
-            )
-        )
+        bg = wedding_facts_block(person)
+        if sites:
+            bg = f"据{sites}等报道，{bg}"
+        sections.append(("p", bg))
 
-    sections.append(("h2", h2_event(angle, person)))
-    narrative = merge_facts_to_paragraphs(ranked, person, max_paras=4, sents_per_para=2)
+    narrative = merge_facts_to_paragraphs(ranked, person, max_paras=3, sents_per_para=2)
     used = len(ranked[: max(len(narrative), 1)])
+    for i, para in enumerate(narrative):
+        text = para
+        if not narrative and i == 0 and sites:
+            text = f"据{sites}等报道，{text}"
+        sections.append(("p", polish(text)))
 
-    if narrative:
-        for i, para in enumerate(narrative):
-            text = para
-            if i == 0 and sites and "据" not in text:
-                text = f"据{sites}等报道，{text}"
-            sections.append(("p", polish(text)))
-    else:
+    vow = _extract_vow_snippet(ranked)
+    if vow:
+        sections.append(
+            (
+                "box",
+                polish(f"誓词里能核对到的关键句：{vow}对照模板，缺的是「贫穷/富贵」那一整段。"),
+            )
+        )
+
+    debate = write_debate_layer(person, hot_title, netizen)
+    if debate:
+        sections.append(("h2", h2_debate()))
+        for para in debate:
+            sections.append(("p", para))
+
+    unsaid = write_unsaid_truth(person, hot_title, kind, ranked)
+    sections.append(("h2", h2_unsaid(), "bg:#9b59b6"))
+    for para in unsaid:
+        sections.append(("p", para))
+
+    nums = _meaningful_numbers(bundle.get("numbers") or [])
+    if nums and ("婚礼" in hot_title or "誓词" in hot_title):
         sections.append(
             (
                 "p",
                 polish(
-                    f"眼下公开渠道还在消化这条热搜，一手细节（比如誓词全文、现场原话）"
-                    f"还没被权威媒体完整放出。你能确定的，主要是「{hot_title}」这条词条本身在发酵。"
+                    f"几个常被提起的数字：{'、'.join(nums)}。"
+                    f"数字本身不是结论，但能和「补办」「高定」「耗时」这些细节对上线。"
                 ),
             )
         )
-        used = 0
-
-    vow = _extract_vow_snippet(ranked) or (quotes[0] if quotes else "")
-    if vow and len(vow) >= 15:
-        sections.append(("h2", f"{person}誓词原句"))
-        sections.append(("p", polish(f"能核对到的承诺大意是：{vow}")))
-
-    nums = [n for n in (bundle.get("numbers") or []) if not re.match(r"^\d{4}年?$", n)]
-    if nums:
-        sections.append(("box", polish(f"和事件相关的数字：{'、'.join(nums[:4])}（口径以原报道为准）")))
-
-    sections.append(("h2", h2_opinion(), "bg:#9b59b6"))
-    sections.append(("p", write_opinion(person, hot_title, kind, ranked, quotes)))
 
     sections.append(("h2", h2_reader(), "bg:#d4636a"))
     sections.append(
         (
             "p",
             polish(
-                f"你是站{person}这边，还是觉得誓词/表述欠考虑？"
-                f"欢迎评论区说说你的理由——带细节的那种，别只扔一句「无语」。"
+                f"你更在意{person}删词，还是在意他夸妻子那套话术？"
+                f"或者你觉得誓词本来就该私人化、不该被全网审判？"
+                f"带一句你自己的判断来聊，比复制梗图有用。"
             ),
         )
     )
-    sections.append(("p", closing_line(person, hot_title, kind)))
+    sections.append(("p", closing_line(person, hot_title)))
     sections.append(
-        ("p", polish("（公开信息整理 + 编辑观点，不含未证实爆料；发布前请人工核对。）"))
+        ("p", polish("（公开信息整理 + 编辑判断，不含未证实爆料；发布前请人工核对。）"))
     )
     return sections, used, angle
 
@@ -186,10 +177,9 @@ def build_sections_long(
     hot_title: str,
     bundle: dict[str, Any],
     *,
-    hot_value: int | None,
     kind: str,
 ) -> tuple[list[tuple], int, str]:
-    return build_sections_short(person, hot_title, bundle, hot_value=hot_value, kind=kind)
+    return build_sections_short(person, hot_title, bundle, kind=kind)
 
 
 def compose(
@@ -220,13 +210,7 @@ def compose(
     title = seo_title(person, hot_title, bundle)
 
     builder = build_sections_long if article_type == "long" else build_sections_short
-    sections, facts_used, angle = builder(
-        person,
-        hot_title,
-        bundle,
-        hot_value=int(hot_item.get("hot_value") or 0) or None,
-        kind=kind,
-    )
+    sections, facts_used, angle = builder(person, hot_title, bundle, kind=kind)
     html = render(person, title, color, sections)
     plain = re.sub(r"<[^>]+>", "", html)
     char_count = count_han(plain)
@@ -243,7 +227,7 @@ def compose(
 
     meta = {
         "pipeline": "toutiao-entertainment",
-        "compose_mode": "editorial",
+        "compose_mode": "editorial-unsaid",
         "angle": angle,
         "person": person,
         "hot_title": hot_title,

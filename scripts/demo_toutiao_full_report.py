@@ -62,6 +62,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Toutiao entertainment demo with SEO + manage publish")
     ap.add_argument("--no-publish", action="store_true", help="Skip upload to manage")
     ap.add_argument("--topic-index", type=int, default=0, help="Pick hot list item index")
+    ap.add_argument("--title-contains", default="", help="Pick first hot item whose title contains this")
     args = ap.parse_args()
 
     if not os.environ.get("VOLC_SEARCH_API_KEY"):
@@ -84,6 +85,11 @@ def main() -> None:
         sys.exit(1)
 
     idx = min(args.topic_index, len(items) - 1)
+    if args.title_contains:
+        for i, c in enumerate(items):
+            if args.title_contains in (c.get("title") or ""):
+                idx = i
+                break
     item = items[idx]
     title = item.get("title") or ""
 

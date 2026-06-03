@@ -1,103 +1,190 @@
 #!/usr/bin/env python3
-"""Editorial layer — angle, opinion, reader voice (not encyclopedia stitching)."""
+"""
+Editorial layer — 厚信息 + 潜台词观点（不写热度、不把信息当观点）。
+"""
 from __future__ import annotations
 
 import re
 from typing import Any
 
 from de_ai_polish import polish
-from fact_rank import event_keywords, rank_facts
+from fact_rank import clean_snippet, event_keywords
 
 
 def pick_angle(hot_title: str, person: str, kind: str) -> str:
-    kws = event_keywords(hot_title, person)
-    hook = "、".join(kws[:3]) if kws else hot_title[:10]
     if "贫穷" in hot_title or "誓词" in hot_title:
-        return "婚礼誓词里的阶级语境"
+        return "誓词里被删掉的不是词，是共同风险"
     if kind == "wedding":
-        return f"{person}婚礼细节"
-    if kind == "gossip":
-        return hook
-    return hook
+        return f"{person}婚礼公共话术"
+    kws = event_keywords(hot_title, person)
+    return "、".join(kws[:3]) if kws else hot_title[:10]
 
 
-def hook_opening(person: str, hot_title: str, hot_value: int | None, angle: str) -> str:
-    heat = ""
-    if hot_value and hot_value > 20_000:
-        heat = f"热度已经冲到 {hot_value // 10000} 万+，"
+def hook_opening(person: str, hot_title: str, angle: str) -> str:
+    """开头只甩判断，不写热度/热搜。"""
     if "贫穷" in hot_title or "誓词" in hot_title:
         return polish(
-            f"{person}婚礼誓词里那句「没有贫穷」，{heat}把微博热搜顶上了。"
-            f"不是祝福写得多浪漫，是这句话的语境太「硬」——你一眼就能读出阶层差异。"
+            f"{person}婚礼誓词里没出现「贫穷」二字——很多人以为大家在骂炫富，"
+            f"其实吵的是另一件事：公共仪式里，富人愿不愿意假装自己和普通人共用同一套语言。"
+            f"祝福可以是真的，但这句话的语境太硬，你一眼就能读出阶层差异。"
         )
     return polish(
-        f"{person}因为「{hot_title}」上了热搜。{heat}"
-        f"我先把能核实的细节捋一遍，再说说我怎么看。"
+        f"「{hot_title}」这事，表面是八卦，底下往往是身份和话术撞车。"
+        f"我先把能核对的细节铺开，再说大家愣着不说的那句。"
     )
 
 
-def write_opinion(
+def wedding_facts_block(person: str) -> str:
+    return polish(
+        f"{person}和奚梦瑶在法国圣米歇尔山补办婚礼，誓词没有照搬西方模板里"
+        f"「无论贫穷还是富贵、疾病还是健康」那整句，而是改成「无论顺境还是低谷，"
+        f"热闹还是安静」。报道里还提到，他花了不少篇幅回答奚梦瑶常问的那句「你为什么爱我」——"
+        f"夸的是她靠自己打拼出来的路，不是「我养你」。"
+    )
+
+
+def extract_netizen_lines(facts: list[str], *, limit: int = 3) -> list[str]:
+    out: list[str] = []
+    for f in facts:
+        f = clean_snippet(f)
+        for m in re.finditer(
+            r"(有网友[^。！？]{8,70}|[^。]*调侃[^。！？]{4,60}|[^。]*笑称[^。！？]{4,60})",
+            f,
+        ):
+            line = m.group(0).strip()
+            if "本文作者" in line or len(line) < 12:
+                continue
+            if line not in out:
+                out.append(line)
+            if len(out) >= limit:
+                return out
+    return out
+
+
+def write_debate_layer(person: str, hot_title: str, netizen: list[str]) -> list[str]:
+    """大家在吵什么 — 信息层，不是观点层。"""
+    paras: list[str] = []
+    if "贫穷" in hot_title:
+        paras.append(
+            polish(
+                f"评论区大致分两路：一路玩梗，拿「早鸟票」「人生词典里没有穷字」开涮；"
+                f"另一路替他找补，说誓词很真诚、是在夸妻子的独立。"
+                f"两路人骂的不是同一件事——前者盯的是「删词」，后者盯的是「恩爱」。"
+            )
+        )
+        if netizen:
+            paras.append(
+                polish(
+                    f"典型画风是这样的：{netizen[0]}。"
+                    + (f"还有人说，{netizen[1]}。" if len(netizen) > 1 else "")
+                )
+            )
+        paras.append(
+            polish(
+                f"所以你若只回一句「有钱人的爱情也很甜」，很难平息后者；"
+                f"若只回一句「凡尔赛」，又忽略了前者其实在讨论「公共话语怎么写才得体」。"
+            )
+        )
+        return paras
+    if netizen:
+        paras.append(polish(f"舆论场上声音很碎，比较集中的是：{netizen[0]}。"))
+    return paras
+
+
+def write_unsaid_truth(
     person: str,
     hot_title: str,
     kind: str,
     event_facts: list[str],
-    quotes: list[str],
-) -> str:
-    """圈内人立场：理解为主，但有明确判断，禁止空话。"""
+) -> list[str]:
+    """
+    潜台词观点：大家心里都有、很少明说。
+    禁止：热度、上热搜、情商账、让子弹飞。
+    """
     if "贫穷" in hot_title or "誓词" in hot_title:
-        return polish(
-            f"说句实在的，{person}在誓词里写「没有贫穷」，字面是承诺「不让另一半受穷」，"
-            f"但放在赌王之子身上，路人读到的往往是另一层意思：这家子从来不知道「穷」是什么滋味。"
-            f"你如果是粉丝，可能觉得这是霸总式浪漫；如果是路人，更容易觉得被「凡尔赛」糊脸。"
-            f"我不觉得他在故意冒犯谁，但公开誓词本来就要照顾围观者的情绪——"
-            f"这句话信息量是有了，情商账上未必划算。"
+        p1 = polish(
+            f"有句话很少人明说：普通人誓词里的「贫穷」，其实不是修辞，是一条风险共担条款——"
+            f"意思是万一哪天钱没了、病来了，我还在这儿。"
+            f"{person}把它换成「顺境与低谷」「热闹与安静」，换掉的不是两个字，"
+            f"是婚姻里唯一需要两个人一起扛的「匮乏」。"
+            f"低谷可以是情绪低谷，可以是舆论低谷，但很难是「账户见底」那种低谷——"
+            f"这才是路人别扭的根源，不是他爱不爱老婆。"
         )
+        p2 = polish(
+            f"大家也都看见他在夸奚梦瑶：不靠豪门、自己打拼、从模特走到国际舞台。"
+            f"这话若放在私下，是体贴；放在全网可见的誓词里，却像一边拆掉「贫穷」，"
+            f"一边强调「你很能挣钱/你很独立」——"
+            f"潜台词会变成：我们的婚姻不需要讨论穷，只需要讨论你有多值得。"
+            f"你品品，这不是「会不会说话」，是公开仪式该不该继续借用普通人的誓言模板。"
+        )
+        p3 = polish(
+            f"还有一层更尖的：删词未必是傲慢，可能是诚实——"
+            f"他真的不知道「贫穷」该怎么说、怎么说才不像在表演。"
+            f"但诚实和得体可以同时成立：你可以选择不写这句，"
+            f"不必用一套「听起来很美、细想全是特权」的话术，去覆盖那套老模板。"
+            f"网友嘲的不是爱情，是「仪式还要走流程，却不愿在流程里假装一下众生平等」。"
+        )
+        # 若素材里有「谢谢」梗，补第四段
+        blob = " ".join(event_facts[:6])
+        if "谢谢" in blob or "thank" in blob.lower():
+            p4 = polish(
+                f"顺便一提，报道里提到奚梦瑶当年用「谢谢」回应他的「我爱你」——"
+                f"有人解读为克制，有人解读为距离感。"
+                f"这类细节和「删贫穷」叠在一起，会让旁观者更确信："
+                f"这段关系里，「表达」的方式一直和大众预期不同，这次誓词只是又一次显形。"
+            )
+            return [p1, p2, p3, p4]
+        return [p1, p2, p3]
+
     if kind == "wedding":
-        return polish(
-            f"婚礼热搜的套路你我都熟：细节一漏，全网审判。"
-            f"{person}这事，我觉得核心不是「结没结」，而是公众想看的到底是幸福，还是落差。"
-            f"你要是真关心他，不如等当事人完整回应；要是吃瓜，就把争议点看清楚再站队。"
-        )
-    if quotes:
-        q = quotes[0][:60]
-        return polish(
-            f"我倾向把这事看成「一句话被拎出来放大」。"
-            f"报道里提到「{q}…」，但热搜标题往往只留最刺激的那半句。"
-            f"你要是想发表看法，至少把原话上下文找齐——不然很容易骂错人。"
-        )
+        return [
+            polish(
+                f"婚礼报道最容易漏掉的是：镜头拍的是幸福，评论区读的是符号。"
+                f"{person}这事，符号就是「删掉的那个词」——"
+                f"大家未必真想看他受苦，只是想确认公共人物还愿不愿意在语言上和自己站在同一边。"
+            )
+        ]
+
     if event_facts:
-        hint = event_facts[0][:80]
-        return polish(
-            f"看完一圈公开信息，我的判断是：这事还有继续发酵的空间。"
-            f"目前能确认的是「{hint}…」这类细节，但情绪已经跑在事实前面了。"
-            f"你若是路人，先别急着下结论；若是老粉，也别把热搜当全貌。"
+        hint = clean_snippet(event_facts[0])[:100]
+        return [
+            polish(
+                f"信息摆到这儿，真正刺人的往往不是「发生了什么」，而是「为什么偏偏这样表达」。"
+                f"就这件事，大家心里都有数，只是很少点破："
+                f"舆论要的不是更多形容词，而是一个能解释「他凭什么这样写」的答案。"
+            )
+        ]
+    return [
+        polish(
+            f"细节还不够下死结论，但有一点可以确定："
+            f"热搜标题里的{person}，和现场那个会改誓词的人，往往不是同一张脸。"
         )
-    return polish(
-        f"目前能写的只有热搜词条本身，细节还在路上。"
-        f"我的态度是：先让子弹飞一会儿，等{person}方或主流媒体把来龙去脉说全，再聊值不值得上纲上线。"
-    )
+    ]
 
 
-def closing_line(person: str, hot_title: str, kind: str) -> str:
+def closing_line(person: str, hot_title: str) -> str:
     if "贫穷" in hot_title:
         return polish(
-            f"{person}一贯不太按「标准答案」出牌——这次誓词也是。"
-            f"热搜会散，但公众对「怎么说才得体」的标准，只会越来越严。"
+            f"{person}以后还会上新闻，但「誓词要不要提穷」这道题，"
+            f"已经不只是他个人的婚礼花絮——"
+            f"它问的是：名人还能不能、还要不要，在公开场合说普通人的那句誓言。"
         )
     return polish(
-        f"热闹总会过去，{person}接下来怎么接招，比今天谁骂谁更重要。"
-        f"你要是有不同看法，评论区见——别只留表情包。"
+        f"你要是有不同读法，评论区可以掰扯，但尽量带着「删词」或「夸妻」其中一条线来说，"
+        f"别只扔情绪词。"
     )
 
 
-def h2_event(angle: str, person: str) -> str:
-    if "誓词" in angle or "婚礼" in angle:
-        return f"{person}誓词到底说了啥"
-    return f"先把{person}这事说清楚"
+def h2_event(person: str) -> str:
+    return f"先把{person}这场婚礼说清楚"
 
 
-def h2_opinion() -> str:
-    return "说句实在的"
+def h2_debate() -> str:
+    return "评论区其实在吵两回事"
+
+
+def h2_unsaid() -> str:
+    return "大家愣着不说的那句"
 
 
 def h2_reader() -> str:

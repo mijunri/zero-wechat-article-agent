@@ -141,6 +141,10 @@ def pick_sentences(text: str, *, min_len: int = 18, max_len: int = 100) -> list[
     for part in re.split(r"[。！？\n]", clean_snippet(text)):
         part = re.sub(r"\s+", " ", part.strip())
         if min_len <= len(part) <= max_len and not is_junk(part):
+            if part.count("“") != part.count("”"):
+                continue
+            if part.startswith(("”", "。", "，")) or part.endswith(("“", "，")):
+                continue
             if not is_bio_heavy(part, ""):
                 out.append(part)
     return out
