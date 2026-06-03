@@ -2,15 +2,18 @@
 
 > **AI 知识博主** 子代理：微信公众号（深度长文）+ 头条号（每日娱乐热点 ×3）。
 
-## 头条号娱乐日产线
+## 头条号娱乐日产线（entertainment-article）
 
 ```text
-hot-topics (微博/抖音/头条热榜) → 娱乐过滤 → 成稿 → 质检 → platform=toutiao
+hot-topics → 娱乐过滤 → volc-search 两轮 → compose_from_research → platform=toutiao
 ```
 
 ```bash
+# 需配置 VOLC_SEARCH_API_KEY（见 data/auth/volc_search.json 或 volc-search/scripts/agent.env）
 python3 scripts/pipeline_daily_toutiao_entertainment.py
 ```
+
+写作规范：`.claude/skills/entertainment-article/SKILL.md`（源仓库 `mijunri/ai-article`）。
 
 预览：http://manage.foxrouter.com/app/deliverables?platform=toutiao
 
@@ -70,6 +73,8 @@ python3 .claude/skills/zero-wechat-article-write/scripts/write_article.py pipeli
 | `zero-wechat-article-write` | brief → HTML |
 | `zero-deliverables` | 上传指挥台 |
 | `hot-topics` | 60s 热榜 API（上游 skill） |
+| `entertainment-article` | 娱乐写稿（来自 **ai-article**） |
+| `volc-search` | 中文联网搜索（写作前必做） |
 | `zero-toutiao-entertainment` | 头条号娱乐每日 3 篇 |
 | `zero-wechat-article` | 微信公众号后台 API（未接） |
 

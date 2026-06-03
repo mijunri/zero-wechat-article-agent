@@ -1,0 +1,26 @@
+{
+  "skill_name": "volc-search",
+  "evals": [
+    {
+      "id": 1,
+      "name": "basic-chinese-search",
+      "prompt": "帮我搜索一下「人工智能 最新进展」，找出最近5条相关新闻",
+      "expected_output": "Should return 5 search results about AI in Chinese, formatted with title, source, URL, and summary",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "time-filtered-news",
+      "prompt": "搜索今天的科技新闻，只看今天的内容",
+      "expected_output": "Should use time_range='1d' or 'today' to filter results from today",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "webpage-fetch",
+      "prompt": "抓取这个网页的完整内容：https://www.thepaper.cn/",
+      "expected_output": "Should use web_fetch to get full page content, return title and main content",
+      "files": []
+    }
+  ]
+}

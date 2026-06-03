@@ -13,7 +13,9 @@ metadata:
 
 # zero-toutiao-entertainment
 
-头条号 **娱乐新闻** 日产线：依赖同仓库 [`hot-topics`](../hot-topics/SKILL.md)（60s API），只产出可发头条号的娱乐向短文。
+头条号 **娱乐新闻** 日产线（每日 3 篇）。**成稿规范以 [`entertainment-article`](../entertainment-article/SKILL.md) 为准**（来自 `ai-article` 仓库），本 Skill 负责编排与发布。
+
+依赖：[`hot-topics`](../hot-topics/SKILL.md) 拉热榜 → [`entertainment-article`](../entertainment-article/SKILL.md) 搜索+写作 → [`zero-deliverables`](../zero-deliverables/SKILL.md) 上传。
 
 ## 依赖
 
@@ -37,10 +39,10 @@ python3 scripts/pipeline_daily_toutiao_entertainment.py
 
 ```text
 weibo + douyin + toutiao 热榜
-  → entertainment_filter（剔除时政/社会硬新闻）
-  → compose_toutiao_article（800–1500 字结构稿）
-  → quality_check
-  → publish_toutiao → 指挥台 platform=toutiao
+  → entertainment_filter
+  → volc-search 两轮（research_topic.py → data/searchdata/）
+  → compose_from_research.py（entertainment-article 短篇）
+  → publish_toutiao → platform=toutiao
 ```
 
 预览：http://manage.foxrouter.com/app/deliverables?platform=toutiao

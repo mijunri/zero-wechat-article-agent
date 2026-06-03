@@ -1,0 +1,4 @@
+{
+  "api_endpoint": "https://open.feedcoopapi.com/search_api",
+  "api_key": "YOUR_VOLC_SEARCH_API_KEY"
+}

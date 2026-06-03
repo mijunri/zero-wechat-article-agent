@@ -7,6 +7,10 @@ __pycache__/
 examples/*.html
 .cache/
 .agents/
+data/auth/*
+!data/auth/.gitkeep
+!data/auth/*.example
+data/searchdata/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/

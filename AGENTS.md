@@ -12,6 +12,8 @@
 | `zero-deliverables` | `.claude/skills/zero-deliverables/SKILL.md` |
 | `zero-wechat-article` | `.claude/skills/zero-wechat-article/SKILL.md` |
 | `hot-topics` | `.claude/skills/hot-topics/SKILL.md` |
+| `entertainment-article` | `.claude/skills/entertainment-article/SKILL.md`（来自 `ai-article`） |
+| `volc-search` | `.claude/skills/volc-search/SKILL.md` |
 | `zero-toutiao-entertainment` | `.claude/skills/zero-toutiao-entertainment/SKILL.md` |
 
 ## 默认交付
