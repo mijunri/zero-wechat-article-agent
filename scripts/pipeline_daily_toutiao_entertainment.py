@@ -22,7 +22,7 @@ ENT = SKILLS / "entertainment-article" / "scripts"
 TT = SKILLS / "zero-toutiao-entertainment" / "scripts"
 DELIVERABLES_ENV = SKILLS / "zero-deliverables" / "scripts" / "agent.env"
 VOLC_ENV = SKILLS / "volc-search" / "scripts" / "agent.env"
-DAILY_COUNT = 3
+DAILY_COUNT = 5
 VOLC_ROUNDS = 4
 ARTICLE_TYPE = "short"  # toutiao 短篇快讯；公众号可用 long
 

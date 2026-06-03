@@ -42,26 +42,15 @@ def _classify(title: str) -> str:
 
 
 def _pick_title(person: str, hot_title: str, bundle: dict[str, Any]) -> str:
-    nums = bundle.get("numbers") or []
-    candidates = bundle.get("title_candidates") or []
-    for c in candidates:
-        c = str(c).strip()
-        if person in c and 8 <= len(c) <= 24 and not re.match(r"^\d{4}年", c):
-            return c
-    # Prefer concrete hot title with person name
-    if person and person in hot_title and len(hot_title) <= 24:
+    # 优先用热搜原标题（含人名/事件名），避免乱拼出生年份
+    if 8 <= len(hot_title) <= 28:
         return hot_title
+    if person and person in hot_title and len(hot_title) <= 30:
+        return hot_title[:30]
     if person and person not in hot_title:
         t = f"{person}：{hot_title}"
-        if len(t) <= 24:
-            return t
-    for n in nums:
-        if re.match(r"^\d{4}年?$", n):
-            continue
-        t = f"{person}{n}，{hot_title[:10]}"
-        if len(t) <= 24:
-            return t
-    return hot_title[:24] if len(hot_title) > 24 else hot_title
+        return t[:28] if len(t) > 28 else t
+    return hot_title[:28]
 
 
 def _source_line(sources: list[dict]) -> str:

@@ -17,15 +17,22 @@ _STRIP_SUFFIX = re.compile(
 def extract_person(title: str) -> str:
     t = (title or "").strip()
     t = _STRIP_SUFFIX.sub("", t)
+    # 剧名/电影名开头：用整段话题作检索主体
+    if re.match(r"^(电影|剧集|电视剧|综艺|歌手|浪姐)", t) or t.endswith(("确认引进", "爽开爽走", "官宣延期")):
+        return t[:6] if len(t) > 6 else t
     m_photo = re.search(r"([\u4e00-\u9fff]{2,3})婚纱照", t)
     if m_photo:
         return m_photo.group(1)
-    m_pair = re.match(r"^([\u4e00-\u9fff]{2,4})([\u4e00-\u9fff]{2,4})", t)
-    if m_pair and len(m_pair.group(1)) >= 2 and len(m_pair.group(2)) >= 2:
-        return m_pair.group(1)
     m_verb = re.match(r"^([\u4e00-\u9fff]{2,3})([发晒称说回应])", t)
     if m_verb:
         return m_verb.group(1)
+    # 双名同框：奚梦瑶何猷君…（两组各 2-3 字，且第二组不像「婚礼/视频」等事件词）
+    m_pair = re.match(r"^([\u4e00-\u9fff]{2,3})([\u4e00-\u9fff]{2,3})", t)
+    if m_pair:
+        a, b = m_pair.group(1), m_pair.group(2)
+        event_tail = ("婚礼", "视频", "剧情", "官宣", "回应", "曝光", "合体", "同框")
+        if not any(b.startswith(x) for x in event_tail) and not b.endswith("剧"):
+            return a
     m = _NAME_PREFIX.match(t)
     if m:
         return m.group(1)
