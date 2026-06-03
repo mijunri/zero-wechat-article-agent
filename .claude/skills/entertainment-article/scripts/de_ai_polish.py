@@ -21,7 +21,9 @@ _REPLACEMENTS = [
 
 
 def polish(text: str) -> str:
-    out = text
+    from prose_guard import guard_prose  # noqa: WPS433
+
+    out = guard_prose(text)
     for pat, repl in _REPLACEMENTS:
         out = re.sub(pat, repl, out)
     # limit 不是…而是
