@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Compose entertainment article from multi-round volc research bundle.
-Follows entertainment-article: 有信息、数字、原话、非评论体。
+Follows entertainment-article: 有信息、数字、原话、非评论体；集成 SEO 与人名校正。
 """
 from __future__ import annotations
 
@@ -13,6 +13,16 @@ from typing import Any
 
 from de_ai_polish import polish
 from html_render import box, h2, p, render
+from pipeline_meta import extract_h2_plain, inject_meta
+from seo_optimize import (
+    count_han,
+    normalize_person,
+    score_seo,
+    seo_h2_facts,
+    seo_h2_quotes,
+    seo_lead,
+    seo_title,
+)
 
 THEME = {
     "wedding": "#d4636a",
@@ -22,7 +32,7 @@ THEME = {
     "general": "#e67e22",
 }
 
-SHORT_MIN = 650
+SHORT_MIN = 800
 LONG_MIN = 1800
 
 
@@ -39,18 +49,6 @@ def _classify(title: str) -> str:
     if re.search(r"恋|分手|离婚|出轨|官宣", t):
         return "gossip"
     return "general"
-
-
-def _pick_title(person: str, hot_title: str, bundle: dict[str, Any]) -> str:
-    # 优先用热搜原标题（含人名/事件名），避免乱拼出生年份
-    if 8 <= len(hot_title) <= 28:
-        return hot_title
-    if person and person in hot_title and len(hot_title) <= 30:
-        return hot_title[:30]
-    if person and person not in hot_title:
-        t = f"{person}：{hot_title}"
-        return t[:28] if len(t) > 28 else t
-    return hot_title[:28]
 
 
 def _source_line(sources: list[dict]) -> str:
@@ -89,6 +87,19 @@ def _fact_paragraph(fact: str, person: str, sites: str) -> str:
     return polish(text)
 
 
+def _filter_quotes(quotes: list[str], person: str) -> list[str]:
+    out: list[str] = []
+    skip = ("本文作者", "责任编辑", "版权", "扫码", "关注我")
+    for q in quotes:
+        q = (q or "").strip()
+        if len(q) < 8 or len(q) > 120:
+            continue
+        if any(s in q for s in skip):
+            continue
+        out.append(q)
+    return out
+
+
 def build_sections(
     person: str,
     hot_title: str,
@@ -96,31 +107,23 @@ def build_sections(
     *,
     hot_value: int | None,
     article_type: str,
-) -> list[tuple]:
+) -> tuple[list[tuple], int]:
     facts: list[str] = bundle.get("facts") or []
-    quotes: list[str] = bundle.get("quotes") or []
+    quotes = _filter_quotes(bundle.get("quotes") or [], person)
     numbers: list[str] = bundle.get("numbers") or []
     sources = bundle.get("sources") or []
     sites = _source_line(sources)
 
-    num_hint = ""
-    if numbers:
-        num_hint = f"其中一个细节是{numbers[0]}。"
-    heat = ""
-    if hot_value and hot_value > 50_000:
-        heat = f"这条话题在热榜上的热度超过 {hot_value // 10000} 万。"
-
-    opener = polish(
-        f"{person}因为「{hot_title}」这两天被刷屏。{heat}{num_hint}"
-        f"我把几轮搜索下来的公开信息捋了一遍，能确认的比热搜标题里写的要多。"
-    )
+    opener = polish(seo_lead(person, hot_title, hot_value, numbers))
     sections: list[tuple] = [("p", opener)]
 
+    fact_limit = 8 if article_type == "long" else 6
+    used = 0
     if facts:
-        sections.append(("h2", f"先把{person}这件事说清楚"))
-        limit = 5 if article_type == "long" else 3
-        for fact in facts[:limit]:
+        sections.append(("h2", seo_h2_facts(person)))
+        for fact in facts[:fact_limit]:
             sections.append(("p", _fact_paragraph(fact, person, sites)))
+            used += 1
     else:
         sections.append(
             (
@@ -133,7 +136,7 @@ def build_sections(
         )
 
     if quotes:
-        sections.append(("h2", "当事人/身边怎么说"))
+        sections.append(("h2", seo_h2_quotes(person)))
         for q in quotes[:2 if article_type == "short" else 4]:
             sections.append(("p", polish(f"有报道称：{q}。")))
 
@@ -161,7 +164,7 @@ def build_sections(
             polish("（本文由公开信息整理，不含未证实爆料；发布前请人工核对。）"),
         )
     )
-    return sections
+    return sections, used
 
 
 def compose(
@@ -182,13 +185,16 @@ def compose(
             "title_candidates": [research.get("topic_title")],
         }
 
-    person = bundle.get("person") or research.get("person") or hot_item.get("person") or ""
     hot_title = bundle.get("topic_title") or research.get("topic_title") or hot_item.get("title") or ""
+    person = normalize_person(
+        bundle.get("person") or research.get("person") or hot_item.get("person") or "",
+        hot_title,
+    )
     kind = _classify(hot_title)
     color = THEME.get(kind, THEME["general"])
-    title = _pick_title(person, hot_title, bundle)
+    title = seo_title(person, hot_title, bundle)
 
-    sections = build_sections(
+    sections, facts_used = build_sections(
         person,
         hot_title,
         bundle,
@@ -197,7 +203,31 @@ def compose(
     )
     html = render(person, title, color, sections)
     plain = re.sub(r"<[^>]+>", "", html)
-    char_count = len(re.findall(r"[\u4e00-\u9fff]", plain))
+    char_count = count_han(plain)
+    min_chars = LONG_MIN if article_type == "long" else SHORT_MIN
+
+    seo_check = score_seo(
+        title=title,
+        person=person,
+        plain_body=plain,
+        h2_texts=extract_h2_plain(html),
+        char_count=char_count,
+        min_chars=min_chars,
+    )
+
+    meta = {
+        "pipeline": "toutiao-entertainment",
+        "person": person,
+        "hot_title": hot_title,
+        "facts_in_bundle": len(bundle.get("facts") or []),
+        "facts_used": facts_used,
+        "research_rounds": research.get("rounds") or bundle.get("round_count"),
+        "bundle_file": research.get("bundle_file") or "",
+        "seo_check": seo_check,
+        "char_count": char_count,
+        "min_chars": min_chars,
+    }
+    html = inject_meta(html, meta)
 
     return {
         "title": title,
@@ -211,6 +241,8 @@ def compose(
         "search_files": research.get("search_files") or [],
         "bundle_file": research.get("bundle_file") or "",
         "research_rounds": research.get("rounds") or bundle.get("round_count"),
+        "seo_check": seo_check,
+        "pipeline_meta": meta,
     }
 
 
@@ -239,6 +271,8 @@ def main() -> None:
                 "char_count": article["char_count"],
                 "person": article["person"],
                 "rounds": article.get("research_rounds"),
+                "seo_score": article.get("seo_check", {}).get("seo_score"),
+                "seo_grade": article.get("seo_check", {}).get("seo_grade"),
                 "min_chars": min_chars,
                 "ok": article["char_count"] >= min_chars,
             },

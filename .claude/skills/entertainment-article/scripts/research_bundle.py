@@ -74,7 +74,7 @@ def build_bundle(
 
     numbers = extract_numbers(blob)
     quotes = extract_quotes(blob, person)
-    facts = [i.get("text") for i in merged if len(i.get("text") or "") > 20][:10]
+    facts = [i.get("text") for i in merged if len(i.get("text") or "") > 20][:30]
     sources = [
         {"title": i.get("title"), "site": i.get("site"), "url": i.get("url")}
         for i in merged[:8]

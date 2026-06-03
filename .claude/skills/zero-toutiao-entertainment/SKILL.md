@@ -29,11 +29,13 @@ source .claude/skills/zero-deliverables/scripts/env.sh
 pip install -e .   # 可选，流水线用 stdlib + deliverables
 ```
 
-## 一键（每日 3 篇）
+## 一键（每日 5 篇）
 
 ```bash
 python3 scripts/pipeline_daily_toutiao_entertainment.py
 ```
+
+逻辑说明（评估用）：[`docs/PIPELINE-LOGIC.md`](../../../docs/PIPELINE-LOGIC.md)
 
 流程：
 
@@ -41,29 +43,41 @@ python3 scripts/pipeline_daily_toutiao_entertainment.py
 weibo + douyin + toutiao 热榜
   → entertainment_filter
   → volc-search 四轮（R1人物/R2热点/R3聚焦/R4原话+抓取）
-  → research_bundle.json + data/searchdata/*.md
-  → compose_from_research.py（去AI味 + 结构化成稿）
-  → publish_toutiao → platform=toutiao
+  → research_bundle.json（≤30 facts）+ data/searchdata/*.md
+  → compose_from_research.py + seo_optimize（标题/h2/打分）
+  → publish_toutiao → platform=toutiao（HTML 含 pipeline-meta 注释）
 ```
 
 预览：http://manage.foxrouter.com/app/deliverables?platform=toutiao
+
+## 演示（广10+深10，默认上传 manage）
+
+```bash
+python3 scripts/demo_toutiao_full_report.py
+python3 scripts/demo_toutiao_full_report.py --no-publish   # 仅本地
+```
 
 ## 分步
 
 ```bash
 SKILL_DIR="${CLAUDE_SKILL_DIR}"
+ENT="${CLAUDE_SKILL_DIR}/../entertainment-article/scripts"
 
 # 1) 娱乐热点池
 python3 "${SKILL_DIR}/scripts/fetch_entertainment_hot.py" --limit 20 --json-out /tmp/hot.json
 
-# 2) 单条成稿（从 hot.json 取 items[0] 存为 topic.json）
-python3 "${SKILL_DIR}/scripts/compose_toutiao_article.py" \
-  --topic-json /tmp/topic.json --out /tmp/article.json --html-out /tmp/article.html
+# 2) 多轮搜索 + bundle
+python3 "${ENT}/research_topic.py" --person 张三 --topic "热搜标题" --json-out /tmp/research.json
 
-# 3) 质量门禁
+# 3) 成稿 + SEO
+python3 "${ENT}/compose_from_research.py" \
+  --hot-json /tmp/topic.json --research-json /tmp/research.json \
+  --out /tmp/article.json --html-out /tmp/article.html
+
+# 4) 质量门禁（可选）
 python3 "${SKILL_DIR}/scripts/quality_check.py" --article-json /tmp/article.json
 
-# 4) 发布
+# 5) 发布
 python3 "${SKILL_DIR}/scripts/publish_toutiao.py" --article-json /tmp/article.json
 ```
 

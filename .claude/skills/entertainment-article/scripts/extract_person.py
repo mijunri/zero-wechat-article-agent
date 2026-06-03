@@ -30,7 +30,9 @@ def extract_person(title: str) -> str:
     m_pair = re.match(r"^([\u4e00-\u9fff]{2,3})([\u4e00-\u9fff]{2,3})", t)
     if m_pair:
         a, b = m_pair.group(1), m_pair.group(2)
-        event_tail = ("婚礼", "视频", "剧情", "官宣", "回应", "曝光", "合体", "同框")
+        event_tail = ("婚礼", "视频", "剧情", "官宣", "回应", "曝光", "合体", "同框", "誓词")
+        if b.startswith("婚礼") or b.startswith("婚"):
+            return a
         if not any(b.startswith(x) for x in event_tail) and not b.endswith("剧"):
             return a
     m = _NAME_PREFIX.match(t)

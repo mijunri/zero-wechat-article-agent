@@ -101,8 +101,12 @@ async def research(
     stamp: str,
     rounds: int = 4,
     count: int = 8,
+    broad_count: int | None = None,
+    deep_count: int | None = None,
     time_range: str = "14d",
 ) -> dict:
+    c1 = broad_count if broad_count is not None else count
+    c2 = deep_count if deep_count is not None else count
     from extract_person import topic_keywords  # noqa: E402
 
     kw = topic_keywords(topic_title, person)
@@ -118,7 +122,7 @@ async def research(
         tag="r1-breadth",
         stamp=stamp,
         round_no=1,
-        count=count,
+        count=c1,
         time_range=time_range,
         fetch_top=False,
     )
@@ -134,7 +138,7 @@ async def research(
         tag="r2-hot",
         stamp=stamp,
         round_no=2,
-        count=count,
+        count=c2,
         time_range="7d",
         fetch_top=False,
     )
@@ -199,6 +203,9 @@ def main() -> None:
     p.add_argument("--topic", required=True, help="Hot search title")
     p.add_argument("--stamp", default=datetime.now(BJ).strftime("%Y%m%d"))
     p.add_argument("--rounds", type=int, default=4, choices=[2, 3, 4])
+    p.add_argument("--count", type=int, default=8, help="Per-round result count (both rounds)")
+    p.add_argument("--broad-count", type=int, default=0, help="R1 count; 0 = use --count")
+    p.add_argument("--deep-count", type=int, default=0, help="R2 count; 0 = use --count")
     p.add_argument("--json-out", default="")
     args = p.parse_args()
 
@@ -206,8 +213,18 @@ def main() -> None:
         print("Missing VOLC_SEARCH_API_KEY", file=sys.stderr)
         sys.exit(1)
 
+    bc = args.broad_count or None
+    dc = args.deep_count or None
     result = asyncio.run(
-        research(args.person, args.topic, stamp=args.stamp, rounds=args.rounds)
+        research(
+            args.person,
+            args.topic,
+            stamp=args.stamp,
+            rounds=args.rounds,
+            count=args.count,
+            broad_count=bc,
+            deep_count=dc,
+        )
     )
     # shrink bundle in stdout (full in bundle_file)
     slim = {k: v for k, v in result.items() if k != "bundle"}
