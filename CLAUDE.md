@@ -2,16 +2,20 @@
 
 > **AI 知识博主** 微信公众号子代理：热点采集 → 写稿 → **上传指挥台** →（可选）公众号 API 发布。
 
-## ⚠️ 看不到新文章？先核对账号
+## ⚠️ 默认发布账号：mongo
 
-产物按 **登录用户** 隔离。`ZAM_API_KEY` 必须是你浏览器登录 **同一账号** 在  
-http://manage.foxrouter.com/app/api-keys 创建的 Key。
+全自动流水线默认上传到 **`mongo`**（`authokylw4260@gmail.com`）的产物库。  
+请用 **mongo 账号** 登录浏览器查看：http://manage.foxrouter.com/app/deliverables?platform=wechat
+
+凭证：`.claude/skills/zero-deliverables/scripts/agent.env`（gitignore，Key 名 `wechat-auto-pipeline`）  
+或环境变量 `ZAM_API_KEY`。
+
+核对：
 
 ```bash
-export ZAM_API_KEY="zam_..."
-curl -sS -H "Authorization: Bearer $ZAM_API_KEY" \
-  http://api-manage.foxrouter.com/api/auth/me
-# 显示的 email 必须与你浏览器登录一致
+source .claude/skills/zero-deliverables/scripts/env.sh
+curl -sS -H "Authorization: Bearer $ZAM_API_KEY" "$ZAM_API_BASE/api/auth/me"
+# 应显示 display_name: mongo
 ```
 
 ## 全自动流水线（推荐）
@@ -21,7 +25,7 @@ curl -sS -H "Authorization: Bearer $ZAM_API_KEY" \
 ```bash
 cd zero-wechat-article-agent
 export twitter_api_key="..."
-export ZAM_API_KEY="zam_..."   # 与浏览器登录同一账号
+# ZAM：优先 agent.env（mongo 账号），或 export ZAM_API_KEY=...
 
 python3 scripts/auto_daily_wechat.py
 ```

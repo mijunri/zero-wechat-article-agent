@@ -22,6 +22,22 @@ ROOT = Path(__file__).resolve().parents[1]
 BJ = ZoneInfo("Asia/Shanghai")
 CACHE = ROOT / ".cache" / "auto-daily"
 SKILLS = ROOT / ".claude" / "skills"
+DELIVERABLES_ENV = SKILLS / "zero-deliverables" / "scripts" / "agent.env"
+DEFAULT_PUBLISH_USER = "mongo (authokylw4260@gmail.com)"
+
+
+def _load_local_env() -> None:
+    """Repo-local agent.env wins for ZAM credentials (default: mongo account)."""
+    if not DELIVERABLES_ENV.is_file():
+        return
+    for line in DELIVERABLES_ENV.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, _, v = line.partition("=")
+        k, v = k.strip(), v.strip()
+        if k in ("ZAM_API_KEY", "ZAM_API_BASE") and v:
+            os.environ[k] = v
 
 
 def _die(msg: str) -> None:
@@ -51,14 +67,21 @@ def _zam_me() -> dict:
 
 
 def main() -> None:
+    _load_local_env()
     if not os.environ.get("twitter_api_key", "").strip():
         _die("Missing env twitter_api_key")
     if not os.environ.get("ZAM_API_KEY", "").strip():
-        _die("Missing env ZAM_API_KEY — create at http://manage.foxrouter.com/app/api-keys while logged in")
+        _die(
+            f"Missing ZAM_API_KEY — set in zero-deliverables/scripts/agent.env "
+            f"({DEFAULT_PUBLISH_USER})"
+        )
 
     me = _zam_me()
-    print(f"Upload target account: {me.get('email')} (id={me.get('id')})")
-    print(">>> 请用同一账号登录浏览器查看产物，否则看不到新文章 <<<\n")
+    print(f"Upload target account: {me.get('display_name')} <{me.get('email')}> (id={me.get('id')})")
+    if me.get("display_name") != "mongo":
+        print(">>> 警告：当前 Key 不是 mongo 账号，浏览器请用对应账号登录 <<<\n", file=sys.stderr)
+    else:
+        print(">>> 请用 mongo 账号登录浏览器查看产物 <<<\n")
 
     CACHE.mkdir(parents=True, exist_ok=True)
     today = datetime.now(BJ).strftime("%Y-%m-%d")
@@ -133,7 +156,7 @@ def main() -> None:
     email = me.get("email", "")
     print(json.dumps(result, ensure_ascii=False, indent=2))
     print(
-        f"\n✅ 完成 — 请用 {email} 登录后打开：\n"
+        f"\n✅ 完成 — 请用 {me.get('display_name')} ({me.get('email')}) 登录后打开：\n"
         f"   http://manage.foxrouter.com/app/deliverables?platform=wechat\n"
         f"   产物 id={did}，日期应为今天（北京时间）"
     )
