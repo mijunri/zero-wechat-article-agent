@@ -27,6 +27,15 @@ bash "${SKILL_DIR}/scripts/verify.sh"
 ## CLI
 
 ```bash
+# 热榜第 1 名对应推文 — 完整 X 长文（推荐流水线）
+python3 "${SKILL_DIR}/scripts/get_tweet_article.py" \
+  --tweet-id TWEET_ID \
+  --json-out /tmp/tweet-article.json
+```
+
+端点：`GET https://api.twitterapi.io/twitter/article?tweet_id=…`（`contents[]` 全文块）。
+
+```bash
 # 热门 AI 相关（Top，默认 20 条）
 python3 "${SKILL_DIR}/scripts/search_tweets.py" search \
   --query "(AI OR LLM OR Claude OR GPT) lang:en -is:retweet" \

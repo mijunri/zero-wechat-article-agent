@@ -11,14 +11,16 @@ metadata:
 
 # zero-wechat-auto
 
-入口脚本（仓库根目录）：
+标准流程（AttentionVC #1 → Twitter 长文 → 中文理解 → 发布）：
 
 ```bash
-export twitter_api_key="..."
-export ZAM_API_KEY="zam_..."    # 必须与浏览器登录账号一致
+pip install -e .
+source .claude/skills/zero-twitter-collect/scripts/env.sh
+source .claude/skills/zero-deliverables/scripts/env.sh
 python3 scripts/auto_daily_wechat.py
+# 等同 scripts/pipeline_top_article.py
 ```
 
-**看不到文章？** 先 `curl -H "Authorization: Bearer $ZAM_API_KEY" $ZAM_API_BASE/api/auth/me` 核对 email。
+**看不到文章？** `agent.env` 中的 `ZAM_API_KEY` 须为 **mongo**；`curl -H "Authorization: Bearer $ZAM_API_KEY" $ZAM_API_BASE/api/auth/me` 核对 email。
 
 详见仓库根目录 [`CLAUDE.md`](../../../CLAUDE.md)。

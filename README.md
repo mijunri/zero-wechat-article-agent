@@ -10,16 +10,17 @@
 
 | Skill | 说明 |
 |-------|------|
-| `zero-twitter-collect` | TwitterAPI.io 按话题查推文 |
-| `zero-attentionvc-scrape` | AttentionVC AI 热榜长文 |
-| `zero-wechat-article-write` | brief → 微信 HTML |
-| `zero-deliverables` | 上传 [指挥台产物](http://manage.foxrouter.com/app/deliverables?platform=wechat) |
-| `zero-wechat-article` | 公众号素材 / 草稿 / 发布 |
+| `zero-attentionvc-scrape` | AttentionVC AI 热榜（`limit=1`） |
+| `zero-twitter-collect` | `get_tweet_article.py` 拉 X 长文全文 |
+| `zero-wechat-article-write` | brief → 微信 HTML → 指挥台 |
+| `zero-deliverables` | [指挥台产物](http://manage.foxrouter.com/app/deliverables?platform=wechat) |
+| `zero-wechat-auto` | 一键：`pipeline_top_article.py` |
 
 ```bash
-export ZAM_API_KEY="zam_..."
-python3 .claude/skills/zero-wechat-article-write/scripts/write_article.py pipeline \
-  --brief-file examples/brief-daily-ai.json
+pip install -e .
+source .claude/skills/zero-twitter-collect/scripts/env.sh
+source .claude/skills/zero-deliverables/scripts/env.sh
+python3 scripts/pipeline_top_article.py
 ```
 
 ## 能力范围

@@ -1,93 +1,70 @@
 # zero-wechat-article-agent — 指挥手册
 
-> **AI 知识博主** 微信公众号子代理：热点采集 → 写稿 → **上传指挥台** →（可选）公众号 API 发布。
+> **AI 知识博主** 微信公众号：从 AttentionVC 热榜第 1 名长文出发，拉取 X 原文 → 中文理解 → 中文成稿 → 指挥台发布。
 
-## ⚠️ 默认发布账号：mongo
+## 标准流水线（当前版本）
 
-全自动流水线默认上传到 **`mongo`**（`authokylw4260@gmail.com`）的产物库。  
-请用 **mongo 账号** 登录浏览器查看：http://manage.foxrouter.com/app/deliverables?platform=wechat
-
-凭证（已写入各 Skill 的 `scripts/agent.env`，便于本地调试）：
-
-| Skill | 文件 |
-|-------|------|
-| Twitter | `.claude/skills/zero-twitter-collect/scripts/agent.env` → `twitter_api_key` |
-| 指挥台 | `.claude/skills/zero-deliverables/scripts/agent.env` → `ZAM_API_KEY`（mongo） |
-
-核对：
-
-```bash
-source .claude/skills/zero-deliverables/scripts/env.sh
-curl -sS -H "Authorization: Bearer $ZAM_API_KEY" "$ZAM_API_BASE/api/auth/me"
-# 应显示 display_name: mongo
+```text
+AttentionVC AI 热榜 #1
+    → TwitterAPI GET /twitter/article?tweet_id=…（完整长文）
+    → Google 翻译 + 结构化中文解读（compose_chinese_article.py）
+    → brief.json → HTML → zero-deliverables (wechat)
 ```
 
-## 全自动流水线（推荐）
-
-一条命令完成：**Twitter 采集 → AttentionVC 热榜 → 生成 brief → HTML → 上传 wechat 产物**。
+### 一键执行
 
 ```bash
 cd zero-wechat-article-agent
-export twitter_api_key="..."
-# ZAM：优先 agent.env（mongo 账号），或 export ZAM_API_KEY=...
+pip install -e .   # 含 deep-translator
 
+source .claude/skills/zero-twitter-collect/scripts/env.sh
+source .claude/skills/zero-deliverables/scripts/env.sh
+
+python3 scripts/pipeline_top_article.py
+# 或
 python3 scripts/auto_daily_wechat.py
 ```
 
-成功后打开（需同一账号登录）：
+预览：http://manage.foxrouter.com/app/deliverables?platform=wechat（**mongo** 账号）
 
-http://manage.foxrouter.com/app/deliverables?platform=wechat
+## 分步调试
 
-缓存与中间文件：`.cache/auto-daily/`（已 gitignore）。
+```bash
+# 1) 热榜第一
+python3 .claude/skills/zero-attentionvc-scrape/scripts/fetch_ai_hot.py fetch \
+  --period 24h --limit 1 --json-out /tmp/av1.json
+
+# 2) 推文长文（从 av1 里取 tweet_url 的 id）
+python3 .claude/skills/zero-twitter-collect/scripts/get_tweet_article.py \
+  --tweet-id TWEET_ID --json-out /tmp/tw.json
+
+# 3) 中文理解 + 成稿 brief
+python3 scripts/compose_chinese_article.py \
+  --attentionvc-json /tmp/av1.json --tweet-json /tmp/tw.json --out /tmp/brief.json
+
+# 4) 发布
+python3 .claude/skills/zero-wechat-article-write/scripts/write_article.py pipeline \
+  --brief-file /tmp/brief.json
+```
 
 ## Skill Roster
 
 | Skill | 职责 |
 |-------|------|
-| **zero-twitter-collect** | TwitterAPI.io 话题推文（`twitter_api_key`） |
-| **zero-attentionvc-scrape** | AttentionVC AI 24h 热榜 |
-| **zero-wechat-article-write** | brief → 微信 HTML |
-| **zero-deliverables** | 上传指挥台 `platform=wechat`（`ZAM_API_KEY`） |
-| **zero-wechat-article** | 公众号官方 API（`WECHAT_MP_*`） |
+| `zero-attentionvc-scrape` | 热榜 `limit=1` |
+| `zero-twitter-collect` | `get_tweet_article.py` 拉完整长文 |
+| `zero-wechat-article-write` | brief → HTML |
+| `zero-deliverables` | 上传指挥台 |
+| `zero-wechat-article` | 微信公众号后台 API（未接） |
 
-## 流程图
+## 凭证（scripts/agent.env）
 
-```text
-auto_daily_wechat.py
-    ├─ zero-twitter-collect (today Top)
-    ├─ zero-attentionvc-scrape (24h)
-    ├─ brief_from_signals.py
-    ├─ write_article.py pipeline
-    └─ zero-deliverables → manage.foxrouter.com
-```
+| Skill | 变量 |
+|-------|------|
+| Twitter | `twitter_api_key` |
+| 指挥台 | `ZAM_API_KEY`（mongo） |
 
-## 凭证
+## 说明
 
-| 变量 | 用途 |
-|------|------|
-| `twitter_api_key` | TwitterAPI.io |
-| `ZAM_API_KEY` | 指挥台产物 API（**与登录账号一致**） |
-| `ZAM_API_BASE` | 默认 `http://api-manage.foxrouter.com` |
-| `WECHAT_MP_APPID` / `WECHAT_MP_SECRET` | 公众号后台 |
-
-## 手动分步（调试）
-
-```bash
-python3 .claude/skills/zero-attentionvc-scrape/scripts/fetch_ai_hot.py fetch --period 24h --limit 10 --json-out /tmp/av.json
-python3 .claude/skills/zero-twitter-collect/scripts/search_tweets.py search \
-  --query "(AI OR LLM) since:$(TZ=Asia/Shanghai date +%Y-%m-%d) -is:retweet" --query-type Top --limit 15 --json-out /tmp/tw.json
-python3 scripts/brief_from_signals.py --twitter-json /tmp/tw.json --attentionvc-json /tmp/av.json --out /tmp/brief.json
-python3 .claude/skills/zero-wechat-article-write/scripts/write_article.py pipeline --brief-file /tmp/brief.json
-```
-
-## 原则
-
-1. 二次创作，标注来源；禁止整篇搬运。
-2. 写完**必须**入库指挥台 `wechat`，便于预览与复制。
-3. 公众号群发须人工确认。
-
-## 迭代
-
-1. ✅ 全自动 `auto_daily_wechat.py`
-2. ⬜ LLM 润色 brief（可选接入）
-3. ⬜ 公众号草稿 API
+- 旧版 `brief_from_signals.py`（多源拼凑）已弃用，质量不足。
+- 翻译依赖 `deep-translator`（Google 翻译），成稿为「理解 + 博主解读」结构；发布前请人工润色。
