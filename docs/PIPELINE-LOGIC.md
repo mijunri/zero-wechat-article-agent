@@ -48,6 +48,7 @@ flowchart LR
 
 **禁止**：
 - 正文任何位置出现「据××报道」「据报道」「报道里提到」
+- **「不是 A，而是 B」/「不是 A，是 B」** 对仗句式（全文 0 次，见 `workflows/toutiao-entertainment-compose.md`）
 - 搜索残句/百科履历直贴（须 `write_event_narrative` 编辑重述）
 
 体裁 `long` 时 fact 上限更高、字数目标 ≥1800。

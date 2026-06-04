@@ -26,11 +26,11 @@ _REPLACEMENTS = [
 def polish(text: str) -> str:
     from prose_guard import guard_prose  # noqa: WPS433
 
+    from prose_guard import ban_contrast_rhythm  # noqa: WPS433
+
     out = guard_prose(text)
+    out = ban_contrast_rhythm(out)
     for pat, repl in _REPLACEMENTS:
         out = re.sub(pat, repl, out)
-    # limit 不是…而是
-    if len(re.findall(r"不是.{1,30}而是", out)) > 1:
-        out = re.sub(r"不是([^，。]{1,30})而是", r"\1", out, count=1)
     out = re.sub(r"\n{3,}", "\n\n", out)
     return out.strip()

@@ -35,17 +35,18 @@ pip install -e .   # 可选，流水线用 stdlib + deliverables
 python3 scripts/pipeline_daily_toutiao_entertainment.py
 ```
 
-逻辑说明（评估用）：[`docs/PIPELINE-LOGIC.md`](../../../docs/PIPELINE-LOGIC.md)
+逻辑说明：[`docs/PIPELINE-LOGIC.md`](../../../docs/PIPELINE-LOGIC.md)  
+成稿约束（必读）：[`workflows/toutiao-entertainment-compose.md`](../../../workflows/toutiao-entertainment-compose.md)
 
 流程：
 
 ```text
 weibo + douyin + toutiao 热榜
   → entertainment_filter
-  → volc-search 四轮（R1人物/R2热点/R3聚焦/R4原话+抓取）
-  → research_bundle.json（≤30 facts）+ data/searchdata/*.md
-  → compose_from_research.py + seo_optimize（标题/h2/打分）
-  → publish_toutiao → platform=toutiao（HTML 含 pipeline-meta 注释）
+  → volc-search（R1事件 / R2–R3梗与神评 / R4细节）
+  → research_bundle.json + memes[]
+  → compose_from_research（活人感；禁 不是…而是/据××报道）
+  → publish_toutiao → platform=toutiao
 ```
 
 预览：http://manage.foxrouter.com/app/deliverables?platform=toutiao

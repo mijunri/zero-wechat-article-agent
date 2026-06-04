@@ -29,7 +29,7 @@ def hook_opening(person: str, hot_title: str, memes: list[str]) -> str:
             meme_bit = f"网友已经总结好了：{lines[0]}。"
         return _say(
             f"{person}婚礼誓词我扫了一眼，整段没「贫穷」俩字。"
-            f"不是说不甜，是听着太硬，那股阶层味儿藏不住。"
+            f"甜可能有，但听着偏硬，那股阶层味儿藏不住。"
             f"{meme_bit}"
         )
     return _say(f"「{hot_title}」这事儿，瓜不大，但话头够损。")
@@ -86,7 +86,7 @@ def write_punchline(person: str, hot_title: str, kind: str, _event_facts: list[s
         return [
             _say(
                 f"说白了，普通人誓词里写「贫穷」，是怕以后得一块儿扛事儿。"
-                f"{person}写顺境低谷，不是故意恶心谁，是「穷」压根不在他的人生选项里。"
+                f"{person}写顺境低谷，没想着恶心谁，「穷」压根不在他的人生选项里。"
                 f"你让他硬念那俩字，比让他背早鸟票还别扭。"
             ),
             _say(
@@ -99,7 +99,7 @@ def write_punchline(person: str, hot_title: str, kind: str, _event_facts: list[s
                 f"他俩一直就这么说话，誓词不过是又让人看见了一回。"
             ),
         ]
-    return [_say(f"{person}这事儿，最后留下的往往不是真相，是那句话怎么被读。")]
+    return [_say(f"{person}这事儿，最后留人的，常常是那句话怎么被读。")]
 
 
 def closing_line(person: str, hot_title: str) -> str:

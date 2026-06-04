@@ -56,6 +56,8 @@ metadata:
 
 **活人感**（`human_voice.py`）：口语、短句、像吃瓜聊天；避免「风险共担」「匮乏」「坐标系」等论文腔。用「你琢磨一下」「说白了」「听得人…」等，但不要「你咋看」式互动收尾。
 
+**禁止对仗腔（全文 0 次）**：`不是 A，而是 B` / `不是 A，是 B`（含「往往不是」「删的不是…是」）。见 `prose_guard.ban_contrast_rhythm()`、`workflows/toutiao-entertainment-compose.md`。
+
 正文**不得出现**以下新闻稿套话：
 
 | 禁用 | 改法 |

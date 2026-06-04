@@ -25,9 +25,42 @@ _FORBIDDEN = [
 _BROKEN_TAIL = re.compile(r"[，,]?\s*[\"\"」』]\s*$")
 _BROKEN_HEAD = re.compile(r'^[\s，,。\"\"「『]+')
 
+# 全文禁止：不是 A，而是/是 B（对仗腔）
+_CONTRAST_PATTERNS = [
+    re.compile(r"不是[^，。！？\n]{1,36}?，\s*而是"),
+    re.compile(r"不是[^，。！？\n]{1,36}?，\s*是(?!说|否|吗|吧|呀|啊|呢|的|人)"),
+    re.compile(r"往往不是[^，。！？\n]{1,24}?，\s*是"),
+    re.compile(r"删的不是[^，。！？\n]{1,20}?，\s*是"),
+]
+
+
+def find_contrast_violations(text: str) -> list[str]:
+    hits: list[str] = []
+    for pat in _CONTRAST_PATTERNS:
+        for m in pat.finditer(text or ""):
+            hits.append(m.group(0))
+    return hits
+
+
+def ban_contrast_rhythm(text: str) -> str:
+    """Rewrite or strip 不是…而是/不是…是."""
+    t = text or ""
+    subs = [
+        (r"不是说不甜，是听着太硬", "甜可能有，但听着太硬"),
+        (r"不是故意恶心谁，是", "没想着恶心谁，"),
+        (r"往往不是真相，是", "留人的常常是"),
+        (r"删的不是一个词，是", "删掉的是"),
+        (r"不是([^，。]{1,20})，而是", r"\1，"),
+        (r"不是([^，。]{1,20})，是(?!说)", r"\1，"),
+    ]
+    for pat, repl in subs:
+        t = re.sub(pat, repl, t)
+    return t
+
 
 def guard_prose(text: str) -> str:
     t = (text or "").strip()
+    t = ban_contrast_rhythm(t)
     for pat, repl in _FORBIDDEN:
         t = pat.sub(repl, t)
     t = re.sub(r"\s+", " ", t).strip()
@@ -48,5 +81,7 @@ def paragraph_ok(text: str) -> bool:
     if "#" in t and t.count("#") >= 2:
         return False
     if re.search(r"[，,]\s*[\"\"」』]\s*$", t):
+        return False
+    if find_contrast_violations(t):
         return False
     return True
