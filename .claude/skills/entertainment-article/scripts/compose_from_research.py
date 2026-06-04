@@ -81,23 +81,12 @@ def build_sections_short(
     for para in event_paras:
         _emit_para(sections, para, force=True)
 
-    meme_h2, meme_paras = write_meme_section(memes, hot_title)
+    meme_h2, meme_paras, meme_intro = write_meme_section(memes, hot_title)
     if meme_h2 and meme_paras:
         sections.append(("h2", meme_h2))
+        if meme_intro:
+            _emit_para(sections, meme_intro, force=True)
         _emit_meme_list(sections, meme_paras)
-
-    if "誓词" in hot_title or "贫穷" in hot_title:
-        sections.append(
-            (
-                "box",
-                guard_prose(
-                    polish(
-                        "誓词模板对照｜标准：无论贫穷还是富贵，疾病还是健康。"
-                        "他的：无论顺境还是低谷，热闹还是安静——缺的是「穷」那一档。"
-                    )
-                ),
-            )
-        )
 
     sections.append(("h2", h2_punchline(), "bg:#9b59b6"))
     for para in write_punchline(person, hot_title, kind, ranked):
