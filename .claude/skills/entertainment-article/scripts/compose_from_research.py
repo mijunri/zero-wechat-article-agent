@@ -103,8 +103,7 @@ def build_sections_short(
     for para in write_punchline(person, hot_title, kind, ranked):
         _emit_para(sections, para, force=True)
 
-    _emit_para(sections, closing_line(person, hot_title))
-    _emit_para(sections, "（编辑整理，不含未证实爆料。）")
+    _emit_para(sections, closing_line(person, hot_title), force=True)
 
     used = len(event_paras) + len(meme_paras)
     return sections, used, angle

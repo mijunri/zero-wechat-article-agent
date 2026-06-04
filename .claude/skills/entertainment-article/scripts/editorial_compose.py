@@ -132,10 +132,10 @@ def write_punchline(
 def closing_line(person: str, hot_title: str) -> str:
     if "贫穷" in hot_title:
         return polish(
-            f"婚礼会散场，「要不要在誓词里提穷」不会。"
-            f"{person}不是第一个，也不会是最后一个，在公共语言里露出特权底色的人。"
+            f"婚礼会散场，「誓词里要不要提穷」这道题不会散——"
+            f"下次还有人照抄模板，网友照样会拿放大镜。"
         )
-    return polish(f"话就说到这儿。{person}的下一句，比网友的下一梗更重要。")
+    return polish(f"{person}的下一句话，多半比今天更好笑，也更难接。")
 
 
 def h2_event(person: str) -> str:

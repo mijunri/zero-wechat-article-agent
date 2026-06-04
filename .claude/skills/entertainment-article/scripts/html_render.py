@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
-"""WeChat/Toutiao HTML renderer (from ai-article gen_articles.py, template only)."""
+"""WeChat/Toutiao HTML renderer — minimal template for manage/toutiao."""
 from __future__ import annotations
-
-from datetime import datetime
-from zoneinfo import ZoneInfo
-
-BJ = ZoneInfo("Asia/Shanghai")
 
 TEMPLATE = """<!DOCTYPE html>
 <html>
@@ -16,13 +11,8 @@ TEMPLATE = """<!DOCTYPE html>
 </head>
 <body style="margin:0;padding:0;background:#fff;">
 <div id="article-content" style="max-width:677px;margin:0 auto;padding:20px 16px;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;color:#333;line-height:1.8;font-size:16px;">
-<h1 style="font-size:22px;font-weight:bold;color:#1a1a1a;line-height:1.4;text-align:center;margin:0 0 8px;">{title}</h1>
-<p style="text-align:center;color:#999;font-size:13px;margin:0 0 28px;">异次元探险家 · {date}</p>
+<h1 style="font-size:22px;font-weight:bold;color:#1a1a1a;line-height:1.4;text-align:center;margin:0 0 24px;">{title}</h1>
 {body}
-<div style="text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid #eee;">
-  <p style="font-size:15px;color:#666;font-weight:500;margin:0 0 4px;">异次元探险家 · 深度研究</p>
-  <p style="font-size:12px;color:#999;margin:0;">数据来源：公开信息整理，仅供参考</p>
-</div>
 </div>
 </body>
 </html>"""
@@ -65,7 +55,7 @@ def box(text: str, color: str = "#d4636a") -> str:
 def render(
     person: str,
     title: str,
-  color: str,
+    color: str,
     sections: list[tuple],
 ) -> str:
     body_parts: list[str] = []
@@ -80,9 +70,4 @@ def render(
         elif sec[0] == "box":
             body_parts.append(box(sec[1], color=color))
     body = "\n".join(body_parts)
-    return TEMPLATE.format(
-        title=title,
-        person=person,
-        date=datetime.now(BJ).strftime("%Y-%m-%d"),
-        body=body,
-    )
+    return TEMPLATE.format(title=title, person=person, body=body)
