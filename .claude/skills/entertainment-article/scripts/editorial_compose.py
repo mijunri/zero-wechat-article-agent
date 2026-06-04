@@ -54,7 +54,7 @@ def write_event_narrative(person: str, hot_title: str, kind: str) -> list[str]:
     return []
 
 
-def format_meme_lines(memes: list[str], hot_title: str, *, max_items: int = 5) -> list[str]:
+def format_meme_lines(memes: list[str], hot_title: str, *, max_items: int = 6) -> list[str]:
     if "贫穷" in hot_title or "誓词" in hot_title:
         pool = fallback_memes(hot_title)
     else:
@@ -88,6 +88,10 @@ def write_punchline(person: str, hot_title: str, kind: str, _event_facts: list[s
                 f"说白了，普通人誓词里写「贫穷」，是怕以后得一块儿扛事儿。"
                 f"{person}写顺境低谷，不是故意恶心谁，是「穷」压根不在他的人生选项里。"
                 f"你让他硬念那俩字，比让他背早鸟票还别扭。"
+            ),
+            _say(
+                f"他把「疾病还是健康」也换成了「热闹还是安静」。"
+                f"听着像文艺，其实就是：我俩的日子，不太会出现你只能在家喝粥那种剧情。"
             ),
             _say(
                 f"还有个小彩蛋：奚梦瑶当年用「谢谢」回他的「我爱你」。"
