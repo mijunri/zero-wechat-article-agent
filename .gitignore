@@ -17,3 +17,17 @@ data/searchdata/
 dist/
 *.egg-info/
 .DS_Store
+.cursor/
+# 外部安装的 skills (npx skills add 安装的)
+.claude/skills/byted-*/
+.claude/skills/code-optimization
+.claude/skills/deepsearch
+.claude/skills/image-*/
+.claude/skills/link-reader
+.claude/skills/skills-*/
+.claude/skills/tos-*/
+.claude/skills/veadk-*/
+.claude/skills/video-*/
+.claude/skills/viking-*/
+.claude/skills/volcengine-rds-mysql
+.claude/skills/web-search
