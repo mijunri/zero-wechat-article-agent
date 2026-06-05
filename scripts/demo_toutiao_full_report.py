@@ -63,6 +63,7 @@ def main() -> None:
     ap.add_argument("--no-publish", action="store_true", help="Skip upload to manage")
     ap.add_argument("--topic-index", type=int, default=0, help="Pick hot list item index")
     ap.add_argument("--title-contains", default="", help="Pick first hot item whose title contains this")
+    ap.add_argument("--topic-json", default="", help="Use fixed hot item JSON (skip hot fetch pick)")
     args = ap.parse_args()
 
     if not os.environ.get("VOLC_SEARCH_API_KEY"):
