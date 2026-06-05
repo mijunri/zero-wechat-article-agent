@@ -1,11 +1,141 @@
 {
   "version": 1,
   "skills": {
+    "byted-bytehouse-ai-query": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "e2f46055f9aa250a111274b69e9a1c928ef6a40b72254e4a831f63b6538e194a"
+    },
+    "byted-bytehouse-data-asset-analyzer": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "7392dd32151d87b58607fa3e7465bd75a7e0c8148f3e102aff307690319b7470"
+    },
+    "byted-bytehouse-diagnostics": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "093abe2bf7e18025b9640d0cdc75516660c6ebc6650b2e2d6f31846c6846c48c"
+    },
+    "byted-bytehouse-hybrid-search": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "2bb868bd48cf4b00ada746da0d01d0c9f4ca5e3a6f94b2354bae497bc1d95cbb"
+    },
+    "byted-bytehouse-load-analyzer": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "18fa5dc0c89ff5cb74e7c47b46222fdb32bcf7f7ccae3808d8d736fdcf258a73"
+    },
+    "byted-bytehouse-mcp": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "2862d20b38d134b56ae993c365c4ee26606aa846b2fd77b0184a45201380059f"
+    },
+    "byted-bytehouse-multimodal-search": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "0c0cc0f58d799fbfa26383a0c48d2a5e44acbdeefaade0db94868d1d74b6dfb5"
+    },
+    "byted-bytehouse-slow-query": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "f5b0a22a34c09435cb293c69f11d3ae1b72e0de2e690798a2ebdf92885f07af4"
+    },
+    "byted-data-search": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "c1c1ed103c8bbb80046412da461e2697482ebec17a57054667531aad6510eecc"
+    },
+    "byted-supabase": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "95f700c6483c6653d1071cf09c912ea14806b063f994ea923c281bf3ad553607"
+    },
+    "byted-viking-developer": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "87b5058a17c2eb9ee274f8405de2a75c4529dc5f56faae8546241d3cd3989cf1"
+    },
+    "byted-web-search": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "431d84a3c0e0b352dbad0e2f4d96735e0cdb6188469a2e96ae937ae95f56a0fe"
+    },
+    "code-optimization": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "f4f3d74203aa618cda65c674f33f391a1ff0dcc89e0b4710148ccb31dbdef312"
+    },
+    "deepsearch": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "fd4b8e3ba1895ecca07d307c5eb425b8398f5b7b41b0a4b42b8734708b40500f"
+    },
     "hot-topics": {
       "source": "vikiboss/60s-skills",
       "sourceType": "github",
       "skillPath": "skills/hot-topics/SKILL.md",
       "computedHash": "4b839c176891c156e406663537555aedb2818cd51b3a0c6474678552d25f034b"
+    },
+    "image-generate": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "c4a16d34100532e0d428980f58b9762f100cd48a55e8f7645256b772aae8300c"
+    },
+    "image-video-gen": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "e988475f8deeabbd0e205c4f6371af3d4c1d1f9e3243417a737c76aa1b31c602"
+    },
+    "link-reader": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "ae048a43849d8d06141ee2dd43cc400b7d763092476cb8ec9be73cbefe3878bf"
+    },
+    "skills-download": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "29e9470da2e961796d973c73de80933b16ec40a538d63644fbc06adce5bf05ae"
+    },
+    "skills-registration": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "6b3622443866a1d681dfef87c0c0b2db1b773e62881d6f31ee8c35eafdea12b4"
+    },
+    "tos-file-access": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "04133f1d7dc31a3577a629684853131f3052ed17cf794cdc7a8adccc533f9af3"
+    },
+    "veadk-go-skills": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "b7dad46761e70f8a08cfa121337aa01210efc44d4d572405025285bf585dbe72"
+    },
+    "veadk-skills": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "95d366654ccfa482b105fdad891d3659653b729c43035164151eb44ff27fc10b"
+    },
+    "video-generate": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "49c3c11616f96891e4fa7feea8d808d18995255b05e15ed5f2ddf316e1d720d0"
+    },
+    "viking-knowledgebase": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "a46594a21519f81250f6f977adaf6c4327da21289029fe5e110192505ca90f4f"
+    },
+    "volcengine-rds-mysql": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "8e88c51fbe4979eb5f1767f372e24e5842138d76fa629a883fa0cb01ac00c316"
+    },
+    "web-search": {
+      "source": "skills.volces.com",
+      "sourceType": "well-known",
+      "computedHash": "ee096973c15d6f37dd5b25c50ad529f4b5c75f33f5054a039595cd866857fcd0"
     }
   }
 }

@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import ssl
 import sys
 import urllib.error
 import urllib.request
 
 API_BASE = "https://60s.viki.moe/v2"
+
+# 禁用 SSL 验证（用于 macOS 环境）
+SSL_CONTEXT = ssl._create_unverified_context()
 
 PLATFORMS = {
     "weibo": f"{API_BASE}/weibo",
@@ -28,7 +32,7 @@ def fetch(platform: str, *, timeout: int = 60) -> dict:
         headers={"Accept": "application/json", "User-Agent": "zero-wechat-article-agent/1.0"},
     )
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with urllib.request.urlopen(req, timeout=timeout, context=SSL_CONTEXT) as resp:
             data = json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         print(f"HTTP {e.code}: {e.read().decode()}", file=sys.stderr)

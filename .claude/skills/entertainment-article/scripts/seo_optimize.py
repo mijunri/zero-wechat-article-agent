@@ -30,20 +30,26 @@ def normalize_person(person: str, hot_title: str) -> str:
 
 
 def seo_title(person: str, hot_title: str, bundle: dict[str, Any]) -> str:
-    candidates = list(bundle.get("title_candidates") or [])
-    candidates.insert(0, hot_title)
-    if person and person not in hot_title:
-        candidates.insert(0, f"{person}：{hot_title}")
-    for t in candidates:
-        t = (t or "").strip()
-        if 10 <= len(t) <= 28 and person in t:
-            return t
-        if 8 <= len(t) <= 30:
-            return t[:28]
-    base = hot_title or f"{person}最新动态"
-    if person and person not in base:
-        base = f"{person}{base}"
-    return base[:28] if len(base) > 28 else base
+    """使用新标题生成器生成吸睛标题."""
+    try:
+        from title_generator import best_title
+        return best_title(person, hot_title, bundle)
+    except Exception:
+        # fallback to old logic
+        candidates = list(bundle.get("title_candidates") or [])
+        candidates.insert(0, hot_title)
+        if person and person not in hot_title:
+            candidates.insert(0, f"{person}：{hot_title}")
+        for t in candidates:
+            t = (t or "").strip()
+            if 10 <= len(t) <= 28 and person in t:
+                return t
+            if 8 <= len(t) <= 30:
+                return t[:28]
+        base = hot_title or f"{person}最新动态"
+        if person and person not in base:
+            base = f"{person}{base}"
+        return base[:28] if len(base) > 28 else base
 
 
 def seo_lead(person: str, hot_title: str, hot_value: int | None, numbers: list[str]) -> str:

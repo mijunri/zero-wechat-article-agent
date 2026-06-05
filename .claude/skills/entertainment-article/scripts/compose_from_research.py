@@ -77,11 +77,11 @@ def build_sections_short(
     _emit_para(sections, hook_opening(person, hot_title, memes))
 
     sections.append(("h2", h2_event(person)))
-    event_paras = write_event_narrative(person, hot_title, kind)
+    event_paras = write_event_narrative(person, hot_title, kind, bundle)
     for para in event_paras:
         _emit_para(sections, para, force=True)
 
-    meme_h2, meme_paras, meme_intro = write_meme_section(memes, hot_title)
+    meme_h2, meme_paras, meme_intro = write_meme_section(memes, hot_title, bundle)
     if meme_h2 and meme_paras:
         sections.append(("h2", meme_h2))
         if meme_intro:
