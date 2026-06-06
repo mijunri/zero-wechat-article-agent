@@ -6,7 +6,8 @@ __pycache__/
 !.env.example
 examples/*.html
 .cache/
-.agents/
+# .agents/ - removed from ignore to track it
+# .agents/
 data/auth/*
 !data/auth/.gitkeep
 !data/auth/*.example
