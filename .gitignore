@@ -17,7 +17,8 @@ data/searchdata/
 dist/
 *.egg-info/
 .DS_Store
-.cursor/
+# .cursor/ - removed from ignore to track it
+# .cursor/
 # 外部安装的 skills (npx skills add 安装的)
 .claude/skills/byted-*/
 .claude/skills/code-optimization
